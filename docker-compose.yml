@@ -1,0 +1,11 @@
+version: "3"
+services:
+    atariworldmodel:
+        build: .
+        volumes:
+        - ".:/workspace"
+        - "/tmp/.X11-unix:/tmp/.X11-unix"
+        environment:
+        - "DISPLAY=:0.0"
+        devices:
+        - "/dev/dri:/dev/dri"
