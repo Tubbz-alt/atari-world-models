@@ -1,11 +1,11 @@
 SERVICE:=atariworldmodel
 DC:=docker-compose
 DC_RUN:=${DC} run --rm ${SERVICE}
-FILE:=/workspace/r.py
+MODULE:=awm
 
-train:
+deep:
 	xhost +
-	${DC_RUN} ${FILE}
+	${DC_RUN} python -m ${MODULE} ${ARGS}
 
 shell:
 	xhost +
@@ -14,4 +14,4 @@ shell:
 build:
 	${DC} build
 
-.PHONY: train shell build
+.PHONY: deep shell build
