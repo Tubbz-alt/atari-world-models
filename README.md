@@ -44,43 +44,43 @@ decisions.
 # Work-breakdown structure and progress tracking
 
 - [ ] Exercise 1
-    - [x] <a name="t-broad-topic"></a>Find a broad topic
+    - [x] <a name="t-broad-topic"></a>**Find a broad topic**
         - [ ] Get an overview of Deep Reinforcement Learning approaches
-    - [ ] <a name="t-specific-topic"></a>Find a specific topic
-    - [ ] <a name="t-lit-research"></a>Literature and tutorial research / reading
+    - [ ] <a name="t-specific-topic"></a>**Find a specific topic**
+    - [ ] <a name="t-lit-research"></a>**Literature and tutorial research / reading**
         - [ ] Read "World Models" paper
         - [ ] Read ... paper
         - [ ] Read ... paper
-    - [ ] <a name="t-del-ex1"></a>Deliverables for Exercise 1
+    - [ ] <a name="t-del-ex1"></a>**Deliverables for Exercise 1**
         - [ ] Create repository on github
         - [ ] Create development environment
             - [ ] Decide on a framework
             - [ ] Create Docker container
         - [ ] Write README.md
 - [ ] Exercise 2
-    - [ ] <a name="t-start-report"></a> Start with the report
+    - [ ] <a name="t-start-report"></a>**Start with the report**
         - [ ] Create LaTeX template
         - [ ] Document progress and decisions
         - [ ] Generate data to use for plots/figures
-    - [ ] <a name="t-implement"></a>Implement approach from paper
+    - [ ] <a name="t-implement"></a>**Implement approach from paper**
         - [ ] Implement the VAE part
         - [ ] Implement the RNN part
         - [ ] Implement the Controller part
         - [ ] Training runs
         - [ ] Try to replicate the findings in the paper with pong
-    - [ ] <a name="t-fine-tune"></a>Try other games and fine-tune
+    - [ ] <a name="t-fine-tune"></a>**Try other games and fine-tune**
         - [ ] Training runs
-    - [ ] <a name="t-decisions"></a>Network decisions
+    - [ ] <a name="t-decisions"></a>**Network decisions**
         - [ ] Get an understanding of the decisions
         - [ ] Find a way to visualize some of the decisions
 - [ ] Exercise 3
-    - [ ] <a name="t-application"></a>Implement web-app
+    - [ ] <a name="t-application"></a>**Implement web-app**
         - [ ] Host implementation on private server
         - [ ] Create a frontend / visualizer
             - [ ] Settle on a framework
             - [ ] Implement basic frontend
-    - [ ] <a name="t-finish-report"></a>Finish and cleanup report
-    - [ ] <a name="t-presentation"></a>Presentation
+    - [ ] <a name="t-finish-report"></a>**Finish and cleanup report**
+    - [ ] <a name="t-presentation"></a>**Presentation**
         - [ ] Create beamer LaTeX template
         - [ ] Write presentation
         - [ ] Practise presentation
@@ -93,7 +93,7 @@ These are the time estimates in hours including the actual time spent on a topic
 | ---: | ---: | :--- | 
 | 4  |  | [Find a broad topic](#t-broad-topic) | 
 | 4  |  | [Find a specific topic](#t-specific-topic) | 
-| 12 |  | [Literature and tutorial research / reading](#t-lit-researc) | 
+| 12 |  | [Literature and tutorial research / reading](#t-lit-research) | 
 | 8  |  | [Deliverables for Exercise 1](#t-del-ex1) | 
 | 2  |  | [Start with the report](#t-start-report) |
 | 16 |  | [Implement approach from paper](#t-implement) |
@@ -103,8 +103,7 @@ These are the time estimates in hours including the actual time spent on a topic
 | 12 |  | [Implement web-app](#t-application) |
 | 4  |  | [Finish and cleanup report](#t-finish-report) | 
 | 6  |  | [Presentation](#t-presentation) |
----
-|84  |  |  |
+|**84**  |  |  |
 
 # References
 
