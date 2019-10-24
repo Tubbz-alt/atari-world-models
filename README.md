@@ -6,56 +6,57 @@
 
 ## Summary
 
-This project attempts to recreate the neural network described in the first
-part of the "[World Models](#ref-world-models)" paper. After implementation we
-plan to apply it to different Atari games included in the
-[openai-gym](#ref-gym) library and hopefully enhance and adapt the system to be
-better suited to different Atari-style games. The resulting application lets the end
-user watch the network play and provides visualizations for the decisions the
-network makes when playing the well-know game Pong.
+This project attempts to recreate the approach described in the first part of
+the ["World Models"](https://arxiv.org/abs/1803.10122) paper.  The "World
+Model" approach was able to beat the "CarRacing-v0" game included in the
+[openai-gym](https://gym.openai.com/) library.  We will apply the "World Model"
+approach to a select group of Atari games included in the openai-gym library.
+A different deep reinforcement learning approach from 2013 described in
+[Playing Atari with Deep Reinforcement Learning](https://arxiv.org/abs/1312.5602)
+was able to achieve great results for 7 different Atari games. In the end the
+"World Model" approach will be fine-tuned or improved to deliver great results
+when applied to Atari-style games. A small web-application that lets people watch
+the network play the Atari games will be provided.
 
 ## Dataset description
 
-There is no need to prepare a dataset - we will use the [openai-gym](#ref-gym)
-library and the included games.
+There is no need to prepare a dataset - we will use the openai-gym library and the
+included games.
 
 ## Languages, libraries, frameworks
 
 - Python 3.6.9
-- [pytorch 1.2](#ref-pytorch)
-- [openai-gym 0.15.3](#ref-gym)
+- [pytorch 1.2](https://pytorch.org/)
+- openai-gym 0.15.3
 
 ## Approach description
 
-The "World Models" paper is split in two parts. the first part describes a ... and the second
-part ...  This Neural Network was able to solve the openai-gym racing task.
+**Inputs:** The only inputs our network will receive are the video screen, a reward
+and a termination condition. No other access to the emulator state is allowed.
 
-
-We will use the game "Pong-v0" as a testbed for the first implementation. Pong
-was chosen as a first candidate because of the limited computing resources at
-hand and it's simplicity. After having a working implementation for "Pong-v0",
-we will try to move on to "harder" games (Riverraid-v0, Breakout-v0, ...).
-Starting with Pong-v0 and moving on to "more difficult" games will hopefully
-allow us to gradually see a point where the approach does not work as good any
-longer and is in need of adaption. The action space of Pong-v0 and it's visual
-simplicity allows us to further get a good understanding of the network's
-decisions.
+After finishing the implementation of the "World Models" approach,
+we will use the game "Pong-v0" as a first testbed. Pong
+is a suitable first candidate because of its limited action space and visual
+simplicity. After having a working implementation for "Pong-v0",
+we will try to move on to "harder" games (Seaquest-v0, SpaceInvaders-v0, ...).
+and gradually improve the network. In the end we will provide a small web-application
+that visualizes the network playing the games.
 
 # Work-breakdown structure and progress tracking
 
 - [ ] Exercise 1
     - [x] <a name="t-broad-topic"></a>**Find a broad topic**
         - [ ] Get an overview of Deep Reinforcement Learning approaches
-    - [ ] <a name="t-specific-topic"></a>**Find a specific topic**
+    - [x] <a name="t-specific-topic"></a>**Find a specific topic**
     - [ ] <a name="t-lit-research"></a>**Literature and tutorial research / reading**
         - [ ] Read "World Models" paper
-        - [ ] Read ... paper
-        - [ ] Read ... paper
+        - [x] Read "Playing Atari with ..." paper
+        - [ ] Read "Revisiting the ..." paper
     - [ ] <a name="t-del-ex1"></a>**Deliverables for Exercise 1**
-        - [ ] Create repository on github
-        - [ ] Create development environment
-            - [ ] Decide on a framework
-            - [ ] Create Docker container
+        - [x] Create repository on github
+        - [x] Create development environment
+            - [x] Decide on a framework
+            - [x] Create Docker container
         - [ ] Write README.md
 - [ ] Exercise 2
     - [ ] <a name="t-start-report"></a>**Start with the report**
@@ -105,8 +106,19 @@ These are the time estimates in hours including the actual time spent on a topic
 | 6  |  | [Presentation](#t-presentation) |
 |**84**  |  |  |
 
-# References
+# Papers
 
-* <a name="ref-world-models"></a> https://arxiv.org/abs/1809.01999 and https://worldmodels.github.io/
-* <a name="ref-gym"></a> https://gym.openai.com/
-* <a name="ref-pytorch"></a> https://pytorch.org/
+1. "World Models" https://worldmodels.github.io/ and https://arxiv.org/abs/1803.10122
+1. "Playing Atari with Deep Reinforement Learning" https://arxiv.org/abs/1312.5602
+1. "Revisiting the Arcade Learning Environment" https://arxiv.org/abs/1709.06009
+
+# Helpful tutorials
+
+## VAE
+
+1. https://www.jeremyjordan.me/variational-autoencoders/
+1. https://jaan.io/what-is-variational-autoencoder-vae-tutorial/
+
+## RNN
+
+1.  https://colah.github.io/posts/2015-08-Understanding-LSTMs/
