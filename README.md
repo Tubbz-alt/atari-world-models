@@ -10,7 +10,7 @@ This project attempts to recreate the approach described in the first part of
 the ["World Models"](https://arxiv.org/abs/1803.10122) paper.  According to the
 authors the agent trained with the "World Models" approach was the first agent
 to be able to solve the "CarRacing-v0" game included in the
-[OpenAi Gym](https://gym.openai.com/) library.  We will apply the "World
+[OpenAI Gym](https://gym.openai.com/) library.  We will apply the "World
 Models" approach to a select group of Atari games included in the OpenAI Gym
 library.  A different deep reinforcement learning approach from 2013 described
 in [Playing Atari with Deep Reinforcement Learning](https://arxiv.org/abs/1312.5602)
@@ -32,24 +32,24 @@ included games.
 
 ## Approach description
 
-**Inputs:** The only inputs our network will receive are the video screen, a reward signal
+**Inputs:**
+The only inputs our network will receive are the video screen, a reward signal
 and a game-over signal. No other access to the emulator state is allowed.
 
-**Preprocessing:** As described in
+**Preprocessing:**
+As described in
 ["Revisiting the Arcade Learning Environment"](https://arxiv.org/abs/1709.06009)
 we will apply the customary preprocessing to the screen to account for Atari specific
 artefacts (frame stacking, color ...). It seems that it will also be necessary to do some kind
 of reward normalization.
 
-**Comparison **: 
+**Comparison:** 
 To compare our results we will use the guidelines given in
 ["Revisiting the Arcade Learning Environment"](https://arxiv.org/abs/1709.06009) and
 apply them as best as possible to the OpenAI Gym environment.
 
-**Implementation**:
-
+**Implementation:**
 See the work-breakdown structure for [detailed implementation steps](#t-implement).
-
 After finishing the implementation of the "World Models" approach,
 we will use the game "Pong-v0" as a first testbed. Pong
 is a suitable first candidate because of its limited action space and visual
@@ -86,11 +86,12 @@ and gradually improve the network.
         - [ ] Try to replicate the findings in the paper with pong
     - [ ] <a name="t-fine-tune"></a>**Try other games and fine-tune**
         - [ ] Training runs
-    - [ ] <a name="t-decisions"></a>**Network decisions**
+    - [ ] <a name="t-decisions"></a>**Network decisions (optional)**
         - [ ] Get an understanding of the decisions
         - [ ] Find a way to visualize some of the decisions
 - [ ] Exercise 3
-    - [ ] <a name="t-application"></a>**Implement web-app**
+    - [ ] <a name="t-finish-impl"></a>**Finish and cleanup implementation**
+    - [ ] <a name="t-application"></a>**Implement web-app (optional)**
         - [ ] Host implementation on private server
         - [ ] Create a frontend / visualizer
             - [ ] Settle on a framework
@@ -113,13 +114,14 @@ These are the time estimates in hours including the actual time spent on a topic
 | 8  |   | 2, 2 | [Deliverables for Exercise 1](#t-del-ex1) | 
 | 2  |   |  | [Start with the report](#t-start-report) |
 | 16 |   |  | [Implement approach from paper](#t-implement) |
-| 12 |   |  | [Try other games and fine-tune](#t-fine-tune) | 
+| 16 |   |  | [Try other games and fine-tune](#t-fine-tune) | 
 | 4  |   |  | [Add findings to report and iterate](#t-start-report) |
-| 12 |   |  | [Network decisions](#t-decisions) |
-| 12 |   |  | [Implement web-app](#t-application) |
+| 12 |   |  | [Network decisions (optional)](#t-decisions) |
+| 8  |   |  | [Finish and cleanup implementation](#t-finish-impl) |
+| 12 |   |  | [Implement web-app (optional)](#t-application) |
 | 4  |   |  | [Finish and cleanup report](#t-finish-report) | 
 | 6  |   |  | [Presentation](#t-presentation) |
-| **84** | | | |
+| **108** | | | |
 
 # Papers
 
