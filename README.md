@@ -109,9 +109,9 @@ These are the time estimates in hours including the actual time spent on a topic
 | Estimate (h) | Actual (h) | Timelogs | Task description | 
 | ---: | ---: | :--- | :--- | 
 | 4  | 5 | 3, 2  | [Find a broad topic](#t-broad-topic) | 
-| 4  |   | 4, 4 | [Find a specific topic](#t-specific-topic) | 
-| 12 |   | 2, 4, 2, 1 | [Literature and tutorial research / reading](#t-lit-research) | 
-| 8  |   | 2, 2 | [Deliverables for Exercise 1](#t-del-ex1) | 
+| 4  | 8 | 4, 4 | [Find a specific topic](#t-specific-topic) | 
+| 12 | 9 | 2, 4, 2, 1 | [Literature and tutorial research / reading](#t-lit-research) | 
+| 8  | 4 | 2, 2 | [Deliverables for Exercise 1](#t-del-ex1) | 
 | 2  |   |  | [Start with the report](#t-start-report) |
 | 16 |   |  | [Implement approach from paper](#t-implement) |
 | 16 |   |  | [Try other games and fine-tune](#t-fine-tune) | 
@@ -121,7 +121,7 @@ These are the time estimates in hours including the actual time spent on a topic
 | 12 |   |  | [Implement web-app (optional)](#t-application) |
 | 4  |   |  | [Finish and cleanup report](#t-finish-report) | 
 | 6  |   |  | [Presentation](#t-presentation) |
-| **108** | | | |
+| **108** | **24** | | |
 
 # Papers
 
