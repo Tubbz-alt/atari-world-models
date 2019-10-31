@@ -2,6 +2,7 @@ version: "3"
 services:
     atariworldmodel:
         build: .
+        user: $DC_USER
         volumes:
         - ".:/workspace"
         - "/tmp/.X11-unix:/tmp/.X11-unix"

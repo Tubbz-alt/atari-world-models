@@ -11,7 +11,8 @@ RUN apt-get update &&  \
 
 RUN pip install \
     matplotlib==3.1.1 pyglet==1.3.2 \
-    gym[atari]==0.15.3 gym-retro==0.7.0 box2d==2.3.2
+    gym[atari]==0.15.3 gym-retro==0.7.0 box2d==2.3.2 \
+    dataclasses==0.7 isort==4.3.21 black==19.10b0 
 
 RUN mkdir -p /workspace
 WORKDIR /workspace
