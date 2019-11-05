@@ -13,6 +13,7 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
+from . import logger
 from .utils import spread
 
 TARGET_DIRECTORY: Path = Path("data")
@@ -44,6 +45,7 @@ def gather_observations_pooled(
     pool = Pool(cpus_to_use)
 
     episode_split = spread(number_of_episodes, cpus_to_use)
+    logger.debug("episode_split: %s", episode_split)
 
     def build_args(episodes):
         return (
@@ -58,6 +60,7 @@ def gather_observations_pooled(
     work = []
     for episodes in episode_split:
         args = build_args(episodes)
+        logger.debug("Starting worker with %s", args)
         work.append(pool.apply_async(gather_observations, args))
 
     while not all(result.ready() for result in work):
@@ -88,9 +91,8 @@ def gather_observations(
     # A .format() style string with nice padding
     filename = padded_episodes + "-" + padded_states + ".png"
 
-    stamp = (
-        datetime.datetime.now().isoformat() + "-" + multiprocessing.current_process().name
-    )
+    name = multiprocessing.current_process().name
+    stamp = datetime.datetime.now().isoformat() + "-" + name
     target_directory /= game / Path(stamp)
     target_directory.mkdir(parents=True, exist_ok=True)
 
@@ -105,6 +107,8 @@ def gather_observations(
         states = []
 
         for step in range(steps_per_episode):
+            if step % 100 == 0:
+                logger.debug("%s: e=%d s=%d", name, episode, step)
             env.render()
 
             # Choose a random action

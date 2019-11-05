@@ -1,7 +1,8 @@
 import argparse
+import logging
 from argparse import RawDescriptionHelpFormatter
 
-from . import SUPPORTED_GAMES, VERSION, observations
+from . import SUPPORTED_GAMES, VERSION, logger, observations
 from .observations import gather_observations_pooled
 from .vae import train_vae
 
@@ -17,6 +18,9 @@ Atari games.
     )
     parser = argparse.ArgumentParser(
         "awm", description=description, formatter_class=RawDescriptionHelpFormatter
+    )
+    parser.add_argument(
+        "-v", help="Be more verbose", dest="verbose", action="store_true", default=False
     )
     parser.add_argument("game", help="Name of game", choices=SUPPORTED_GAMES)
     subparsers = parser.add_subparsers(
@@ -82,6 +86,9 @@ Atari games.
     # Remove keys not mapping directly to a kwarg
     func = args.pop("func")
     game = args.pop("game")
+    verbose = args.pop("verbose")
+    if verbose:
+        logger.setLevel(logging.DEBUG)
     del args["subcommand"]
 
     func(game, **args)
