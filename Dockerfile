@@ -19,6 +19,7 @@ WORKDIR /workspace
 
 RUN pip install xvfbwrapper==0.2.9
 RUN apt-get install -y xvfb
+RUN pip install pytest==5.2.2
 
 # Only needed to import ROMs
 # RUN python -m retro.import /workspace

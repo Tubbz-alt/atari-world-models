@@ -17,6 +17,10 @@ shell:
 build:
 	${DC} build
 
+tests: export DC_USER:=${DC_USER}
+tests:
+	${DC_RUN} pytest -v ${MODULE}
+
 style: export DC_USER:=${DC_USER}
 style:
 	${DC_RUN} ./isort.sh

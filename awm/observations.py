@@ -13,6 +13,8 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
+from .utils import spread
+
 TARGET_DIRECTORY: Path = Path("data")
 NUMBER_OF_EPISODES: int = 1
 STEPS_PER_EPISODE: int = 2000
@@ -41,8 +43,7 @@ def gather_observations_pooled(
 ):
     pool = Pool(cpus_to_use)
 
-    episodes, remaining = divmod(number_of_episodes, cpus_to_use)
-    episode_split = [episodes] * (cpus_to_use - 1) + [episodes + remaining]
+    episode_split = spread(number_of_episodes, cpus_to_use)
 
     def build_args(episodes):
         return (
