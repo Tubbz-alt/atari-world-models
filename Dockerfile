@@ -17,5 +17,8 @@ RUN pip install \
 RUN mkdir -p /workspace
 WORKDIR /workspace
 
+RUN pip install xvfbwrapper==0.2.9
+RUN apt-get install -y xvfb
+
 # Only needed to import ROMs
 # RUN python -m retro.import /workspace
