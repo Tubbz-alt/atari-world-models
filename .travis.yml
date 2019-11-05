@@ -4,8 +4,15 @@ language: minimal
 services:
   - docker
 
+cache:
+  directories:
+    - docker_images
+
 before_install:
-  - docker ps
+  - docker load -i docker_images/images.tar || true
+
+before_cache:
+  - docker save -o docker_images/images.tar $(docker images -a -q)
 
 script:
   - make build
