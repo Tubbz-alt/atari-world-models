@@ -20,4 +20,4 @@ before_cache:
 
 script:
   - make build
-  - make tests
+  - make tests-travis
