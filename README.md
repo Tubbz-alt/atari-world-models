@@ -1,5 +1,7 @@
 # Atari World Models
 
+[![Build Status](https://travis-ci.com/chsigi/atari-world-models.svg?branch=master)](https://travis-ci.com/chsigi/atari-world-models)
+
 **Type:** Bring your own method (and a somewhat different dataset)
 
 **Topic:** Deep Reinforcement Learning

@@ -1,0 +1,7 @@
+version: "3"
+services:
+    atariworldmodel:
+        build: .
+        user: $DC_USER
+        volumes:
+        - ".:/workspace"

@@ -1,6 +1,7 @@
 SERVICE:=atariworldmodel
 DC:=docker-compose
 DC_RUN:=${DC} run --rm ${SERVICE}
+DC_RUN_TRAVIS:=${DC} -f docker-compose-travis.yml run --rm ${SERVICE}
 MODULE:=awm
 DC_USER:=$(shell id -u):$(shell id -g)
 
@@ -21,9 +22,13 @@ tests: export DC_USER:=${DC_USER}
 tests:
 	${DC_RUN} pytest -v ${MODULE}
 
+tests-travis: export DC_USER:=${DC_USER}
+tests-travis:
+	${DC_RUN_TRAVIS} pytest -v ${MODULE}
+
 style: export DC_USER:=${DC_USER}
 style:
 	${DC_RUN} ./isort.sh
 	${DC_RUN} ./black.sh
 
-.PHONY: deep shell build style
+.PHONY: deep shell build style tests tests-travis
