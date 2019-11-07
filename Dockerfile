@@ -5,21 +5,15 @@ FROM pytorch/pytorch:1.2-cuda10.0-cudnn7-runtime
 
 RUN apt-get update &&  \
     apt-get install -y \
-        python3-tk sox libsox-dev libsox-fmt-all \
-        libgl1-mesa-dri libgl1-mesa-glx freeglut3-dev \
-        swig
+      python3-tk sox libsox-dev libsox-fmt-all \
+      libgl1-mesa-dri libgl1-mesa-glx freeglut3-dev \
+      swig xvfb
 
-RUN pip install \
-    matplotlib==3.1.1 pyglet==1.3.2 \
-    gym[atari]==0.15.3 gym-retro==0.7.0 box2d==2.3.2 \
-    dataclasses==0.7 isort==4.3.21 black==19.10b0 
+ADD requirements.txt /requirements.txt
+RUN pip install -r /requirements.txt
 
 RUN mkdir -p /workspace
 WORKDIR /workspace
-
-RUN pip install xvfbwrapper==0.2.9
-RUN apt-get install -y xvfb
-RUN pip install pytest==5.2.2
 
 # Only needed to import ROMs
 # RUN python -m retro.import /workspace
