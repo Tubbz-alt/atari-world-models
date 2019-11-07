@@ -126,6 +126,23 @@ These are the time estimates in hours including the actual time spent on a topic
 | 6  |   |  | [Presentation](#t-presentation) |
 | **108** | **24** | | |
 
+# Error metric
+
+## Description
+
+Our error metric will be the points that are missing from a "perfect" score in the
+game "CarRacing-v0". The "World Models" paper claims an average score of about 900 points - we
+regard this value as a perfect score.
+
+## Target
+
+We target a point difference of about 100 points. Training will stop when our network
+is able to achieve an average score of 800 per 10 runs.
+
+## Actual
+
+TODO
+
 # Papers
 
 1. "World Models" https://worldmodels.github.io/ and https://arxiv.org/abs/1803.10122
