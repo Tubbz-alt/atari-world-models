@@ -19,7 +19,7 @@ from .utils import spread
 TARGET_DIRECTORY: Path = Path("data")
 NUMBER_OF_EPISODES: int = 1
 STEPS_PER_EPISODE: int = 2000
-ACTION_EVERY_STEPS: int = 10
+ACTION_EVERY_STEPS: int = 20
 SHOW_SCREEN: bool = False
 CPUS_TO_USE: int = multiprocessing.cpu_count()
 
@@ -150,5 +150,5 @@ def load_observations(game, source_directory=TARGET_DIRECTORY):
         ),
         # transform=transforms.ToTensor()
     )
-    dataloader = DataLoader(dataset, batch_size=1, shuffle=False)
+    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
     return dataloader, dataset

@@ -3,7 +3,7 @@ import logging
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
-from . import SUPPORTED_GAMES, VERSION, logger, observations
+from . import SUPPORTED_GAMES, VERSION, logger, observations, vae
 from .observations import gather_observations_pooled
 from .vae import train_vae
 
@@ -80,6 +80,12 @@ Atari games.
         "--source-directory",
         default=observations.TARGET_DIRECTORY,
         help="Path to load the images from (default: %(default)s)",
+    )
+    train_vae_parser.add_argument(
+        "--create-progress-samples",
+        action="store_true",
+        default=vae.CREATE_PROGRESS_SAMPLES,
+        help="Create sample pictures to visualize the learning progress (default: %(default)s)",
     )
     train_vae_parser.set_defaults(func=train_vae)
 
