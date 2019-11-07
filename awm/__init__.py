@@ -1,5 +1,7 @@
 import logging
 
+import torch
+
 VERSION = (0, 0, 1)
 SUPPORTED_GAMES = (
     "Pong-v0",
@@ -16,3 +18,6 @@ logging_handler.setFormatter(formatter)
 
 del logging_handler
 del formatter
+
+# Make torch behaviour more reproducible
+torch.manual_seed(0)
