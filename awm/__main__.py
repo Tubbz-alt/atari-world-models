@@ -1,6 +1,7 @@
 import argparse
 import logging
 from argparse import RawDescriptionHelpFormatter
+from pathlib import Path
 
 from . import SUPPORTED_GAMES, VERSION, logger, observations
 from .observations import gather_observations_pooled
@@ -47,6 +48,7 @@ Atari games.
     )
     observations_parser.add_argument(
         "--target-directory",
+        type=Path,
         default=observations.TARGET_DIRECTORY,
         help="Path where the images should be saved (default: %(default)s)",
     )
