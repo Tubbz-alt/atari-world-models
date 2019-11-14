@@ -35,7 +35,8 @@ def progress_samples(vae, dataset, game, epoch_number, sample_dir=SAMPLE_DIR):
     images = None
     with torch.no_grad():
         for i in range(32):
-            image = dataset[random.randint(0, len(dataset))][0].unsqueeze(0)
+            state, _ = dataset[random.randint(0, len(dataset) - 1)]
+            image = state["observation"].unsqueeze(0)
             reconstruction, _, _ = vae(image)
             if images is not None:
                 images = torch.cat([images, image, reconstruction])
@@ -77,7 +78,8 @@ def train_vae(
 
     for epoch in range(number_of_epochs):
         cumulative_loss = 0.0
-        for idx, (images, _) in enumerate(dataloader):
+        for idx, (states, _) in enumerate(dataloader):
+            images = states["observation"]
             optimizer.zero_grad()
             reconstructions, mu, logvar = vae(images)
             loss, bce, kld = loss_fn(reconstructions, images, mu, logvar)

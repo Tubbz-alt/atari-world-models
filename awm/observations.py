@@ -1,7 +1,9 @@
+import dataclasses
 import datetime
 import math
 import multiprocessing
 import time
+import typing
 from dataclasses import dataclass
 from multiprocessing import Pool
 from pathlib import Path
@@ -28,9 +30,21 @@ CPUS_TO_USE: int = multiprocessing.cpu_count()
 class State:
     filename: str
     observation: np.array
-    action: int
+    action: np.array
     reward: float
     done: bool
+
+    FILE_EXTENSION: typing.ClassVar = ".npy"
+
+    def save(self, target_directory):
+        np.save(
+            target_directory / (self.filename + self.FILE_EXTENSION),
+            dataclasses.asdict(self),
+        )
+
+    @staticmethod
+    def load_as_dict(filename):
+        return np.load(filename, allow_pickle=True).item()
 
 
 def gather_observations_pooled(
@@ -89,7 +103,7 @@ def gather_observations(
     padded_episodes = padding(number_of_episodes)
     padded_states = padding(steps_per_episode)
     # A .format() style string with nice padding
-    filename = padded_episodes + "-" + padded_states + ".png"
+    filename = padded_episodes + "-" + padded_states
 
     name = multiprocessing.current_process().name
     stamp = datetime.datetime.now().isoformat() + "-" + name
@@ -131,9 +145,9 @@ def gather_observations(
             if done:
                 break
 
-        # Write observations to disk
+        logger.info("Writing states to disk")
         for state in states:
-            plt.imsave(target_directory / state.filename, state.observation)
+            state.save(target_directory)
 
     env.close()
 
@@ -142,13 +156,19 @@ def gather_observations(
 
 
 def load_observations(game, source_directory=TARGET_DIRECTORY):
+    def load_and_transform(filename):
+        state_dict = State.load_as_dict(filename)
+        transform = transforms.Compose(
+            [transforms.ToPILImage(), transforms.Resize((64, 64)), transforms.ToTensor(),]
+        )
+        state_dict["observation"] = transform(state_dict["observation"])
+        return state_dict
+
     source_directory /= game
-    dataset = datasets.ImageFolder(
+    dataset = datasets.DatasetFolder(
         root=str(source_directory),
-        transform=transforms.Compose(
-            [transforms.Resize((64, 64)), transforms.ToTensor(),]
-        ),
-        # transform=transforms.ToTensor()
+        loader=load_and_transform,
+        extensions=State.FILE_EXTENSION,
     )
     dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
     return dataloader, dataset

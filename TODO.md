@@ -4,6 +4,7 @@
 
 * Add more logging output
 * Add progressbar to training loops (maybe tqdm)
+* Make z_size available on VAE
 
 ## Observations
 
