@@ -56,10 +56,11 @@ def gather_observations_pooled(
     action_every_steps=ACTION_EVERY_STEPS,
     cpus_to_use=CPUS_TO_USE,
 ):
-    pool = Pool(cpus_to_use)
-
     episode_split = spread(number_of_episodes, cpus_to_use)
     logger.debug("episode_split: %s", episode_split)
+
+    # Actual number of CPUs required after splitting games across CPUs
+    pool = Pool(len(episode_split))
 
     def build_args(episodes):
         return (
@@ -79,6 +80,17 @@ def gather_observations_pooled(
 
     while not all(result.ready() for result in work):
         time.sleep(0.1)
+
+    logger.debug("All results ready")
+
+    # There are not actual results to get, but this reraises exceptions
+    # in the workers
+    for result in work:
+        result.get()
+
+    pool.close()
+    pool.join()
+    logger.debug("Gathering observations done")
 
 
 def gather_observations(

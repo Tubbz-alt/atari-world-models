@@ -8,7 +8,6 @@
 
 ## Observations
 
-* Don't start worker with nothing to do when gathering observations
 * Rename episodes to games in the context of observation gathering
 * Rename target and source directory to observation directory
 
