@@ -116,7 +116,7 @@ These are the time estimates in hours including the actual time spent on a topic
 | 12 | 9 | 2, 4, 2, 1 | [Literature and tutorial research / reading](#t-lit-research) | 
 | 8  | 4 | 2, 2 | [Deliverables for Exercise 1](#t-del-ex1) | 
 | 2  |   |  | [Start with the report](#t-start-report) |
-| 16 |   | 3, 3, 5 | [Implement approach from paper](#t-implement) |
+| 16 |   | 3, 3, 5, 3 | [Implement approach from paper](#t-implement) |
 | 16 |   |  | [Try other games and fine-tune](#t-fine-tune) | 
 | 4  |   |  | [Add findings to report and iterate](#t-start-report) |
 | 12 |   |  | [Network decisions (optional)](#t-decisions) |
