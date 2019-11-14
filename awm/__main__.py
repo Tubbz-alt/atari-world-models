@@ -4,8 +4,9 @@ from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
 from . import SUPPORTED_GAMES, VERSION, logger, observations, vae
+from .mdn_rnn import train_mdn_rnn
 from .observations import gather_observations_pooled
-from .vae import train_vae
+from .vae import precompute_z_values, train_vae
 
 
 def parse():
@@ -88,6 +89,14 @@ Atari games.
         help="Create sample pictures to visualize the learning progress (default: %(default)s)",
     )
     train_vae_parser.set_defaults(func=train_vae)
+
+    precompute_z_values_parser = subparsers.add_parser("precompute-z-values",)
+    precompute_z_values_parser.set_defaults(func=precompute_z_values)
+
+    train_mdn_rnn_parser = subparsers.add_parser(
+        "train-mdn-rnn", help="Train the MDN-RNN", description="Train the MDN-RNN"
+    )
+    train_mdn_rnn_parser.set_defaults(func=train_mdn_rnn)
 
     args = vars(parser.parse_args())
 

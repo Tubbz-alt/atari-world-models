@@ -19,6 +19,7 @@ from . import logger
 from .utils import spread
 
 TARGET_DIRECTORY: Path = Path("data")
+OBSERVATION_DIRECTORY = TARGET_DIRECTORY
 NUMBER_OF_EPISODES: int = 1
 STEPS_PER_EPISODE: int = 2000
 ACTION_EVERY_STEPS: int = 20
@@ -34,12 +35,14 @@ class State:
     reward: float
     done: bool
 
+    disk_location: str = ""
+
     FILE_EXTENSION: typing.ClassVar = ".npy"
 
     def save(self, target_directory):
+        self.disk_location = str(target_directory / (self.filename + self.FILE_EXTENSION))
         np.save(
-            target_directory / (self.filename + self.FILE_EXTENSION),
-            dataclasses.asdict(self),
+            self.disk_location, dataclasses.asdict(self),
         )
 
     @staticmethod
@@ -167,7 +170,7 @@ def gather_observations(
         vdisplay.stop()
 
 
-def load_observations(game, source_directory=TARGET_DIRECTORY):
+def load_observations(game, source_directory=TARGET_DIRECTORY, batch_size=32):
     def load_and_transform(filename):
         state_dict = State.load_as_dict(filename)
         transform = transforms.Compose(
@@ -182,5 +185,5 @@ def load_observations(game, source_directory=TARGET_DIRECTORY):
         loader=load_and_transform,
         extensions=State.FILE_EXTENSION,
     )
-    dataloader = DataLoader(dataset, batch_size=32, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataloader, dataset

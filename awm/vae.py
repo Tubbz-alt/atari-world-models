@@ -174,3 +174,31 @@ def loss_fn(reconstruction, original, mu, logvar):
     # This is based heavily on the vae example from torch
     KLD = -0.5 * torch.sum(1 + 2 * logvar - mu.pow(2) - (2 * logvar).exp())
     return BCE + KLD, BCE, KLD
+
+
+def precompute_z_values(game):
+    dataloader, dataset = load_observations(game, TARGET_DIRECTORY, batch_size=1)
+    device = "cpu"
+
+    with torch.no_grad():
+
+        vae = VAE().to(device)
+
+        # If there is a state file - load it
+        models_dir = Path("models")
+        state_file = models_dir / Path("{}-vae.torch".format(game))
+        if state_file.is_file():
+            vae.load_state_dict(torch.load(str(state_file), map_location=device))
+
+        # contains (z, disk_location) tuples
+        results = []
+        for idx, (observation, _) in enumerate(dataloader):
+            disk_location = observation["disk_location"]
+            z, _, _ = vae.encoder(observation["observation"])
+            results.append((z[0], disk_location[0]))
+
+    for z, disk_location in results:
+        obj = np.load(disk_location, allow_pickle=True).item()
+        obj["z"] = z
+        np.save(disk_location, obj)
+        print(".")
