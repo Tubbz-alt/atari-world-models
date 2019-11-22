@@ -20,8 +20,8 @@ from .utils import spread
 
 TARGET_DIRECTORY: Path = Path("data")
 OBSERVATION_DIRECTORY = TARGET_DIRECTORY
-NUMBER_OF_EPISODES: int = 1
-STEPS_PER_EPISODE: int = 2000
+NUMBER_OF_PLAYS: int = 1
+STEPS_PER_PLAY: int = 2000
 ACTION_EVERY_STEPS: int = 20
 SHOW_SCREEN: bool = False
 CPUS_TO_USE: int = multiprocessing.cpu_count()
@@ -34,6 +34,10 @@ class Observation:
     action: np.array
     reward: float
     done: bool
+
+    # Filled in later by precompute-z-values
+    # FIXME: This is a typing violation
+    z: np.array = 0.0
 
     disk_location: str = ""
 
@@ -54,30 +58,30 @@ def gather_observations_pooled(
     game,
     show_screen=SHOW_SCREEN,
     target_directory=TARGET_DIRECTORY,
-    number_of_episodes=NUMBER_OF_EPISODES,
-    steps_per_episode=STEPS_PER_EPISODE,
+    number_of_plays=NUMBER_OF_PLAYS,
+    steps_per_play=STEPS_PER_PLAY,
     action_every_steps=ACTION_EVERY_STEPS,
     cpus_to_use=CPUS_TO_USE,
 ):
-    episode_split = spread(number_of_episodes, cpus_to_use)
-    logger.debug("episode_split: %s", episode_split)
+    play_split = spread(number_of_plays, cpus_to_use)
+    logger.debug("play_split: %s", play_split)
 
     # Actual number of CPUs required after splitting games across CPUs
-    pool = Pool(len(episode_split))
+    pool = Pool(len(play_split))
 
-    def build_args(episodes):
+    def build_args(plays):
         return (
             game,
             show_screen,
             target_directory,
-            episodes,
-            steps_per_episode,
+            plays,
+            steps_per_play,
             action_every_steps,
         )
 
     work = []
-    for episodes in episode_split:
-        args = build_args(episodes)
+    for plays in play_split:
+        args = build_args(plays)
         logger.debug("Starting worker with %s", args)
         work.append(pool.apply_async(gather_observations, args))
 
@@ -100,25 +104,24 @@ def gather_observations(
     game,
     show_screen,
     target_directory,
-    number_of_episodes,
-    steps_per_episode,
+    number_of_plays,
+    steps_per_play,
     action_every_steps,
 ):
-    """ Play the given game for a number of episodes. Each episode lasts a
+    """ Play the given game for a number of plays. Each play lasts at most a
     given number of steps. Every N steps a random action is taken.
 
-    An episode ends if either the game ends or the number of steps is reached.
-    After each episode the collected observations of the screen are saved as
-    images to a target directory.
+    A play ends if either the game ends or the number of steps is reached.
+    After each play the collected observations are saved to a target directory.
     """
 
     def padding(number):
         return "{:0%d}" % len(str(number))
 
-    padded_episodes = padding(number_of_episodes)
-    padded_states = padding(steps_per_episode)
+    padded_plays = padding(number_of_plays)
+    padded_states = padding(steps_per_play)
     # A .format() style string with nice padding
-    filename = padded_episodes + "-" + padded_states
+    filename = padded_plays + "-" + padded_states
 
     name = multiprocessing.current_process().name
     stamp = datetime.datetime.now().isoformat() + "-" + name
@@ -131,13 +134,13 @@ def gather_observations(
 
     env = gym.make(game)
 
-    for episode in range(number_of_episodes):
+    for play in range(number_of_plays):
         env.reset()
         observations = []
 
-        for step in range(steps_per_episode):
+        for step in range(steps_per_play):
             if step % 100 == 0:
-                logger.debug("%s: e=%d s=%d", name, episode, step)
+                logger.debug("%s: e=%d s=%d", name, play, step)
             env.render()
 
             # Choose a random action
@@ -148,7 +151,7 @@ def gather_observations(
             screen, reward, done, _ = env.step(action)
 
             observation = Observation(
-                filename=filename.format(episode, step),
+                filename=filename.format(play, step),
                 screen=screen,
                 action=action,
                 reward=reward,

@@ -54,16 +54,16 @@ Atari games.
         help="Path where the images should be saved (default: %(default)s)",
     )
     observations_parser.add_argument(
-        "--number-of-episodes",
+        "--number-of-plays",
         type=int,
-        default=observations.NUMBER_OF_EPISODES,
-        help="Number of episodes to play (default: %(default)s)",
+        default=observations.NUMBER_OF_PLAYS,
+        help="Number of plays to play (default: %(default)s)",
     )
     observations_parser.add_argument(
-        "--steps-per-episode",
+        "--steps-per-play",
         type=int,
-        default=observations.STEPS_PER_EPISODE,
-        help="Steps per episode to take (default: %(default)s)",
+        default=observations.STEPS_PER_PLAY,
+        help="Steps per play to take (default: %(default)s)",
     )
     observations_parser.add_argument(
         "--action-every-steps",
@@ -83,8 +83,14 @@ Atari games.
         help="Path to load the images from (default: %(default)s)",
     )
     train_vae_parser.add_argument(
+        "--number-of-epochs",
+        type=int,
+        default=vae.NUMBER_OF_EPOCHS,
+        help="Number of epochs to train the VAE (default: %(default)s)",
+    )
+    train_vae_parser.add_argument(
         "--create-progress-samples",
-        action="store_true",
+        action="store_false",
         default=vae.CREATE_PROGRESS_SAMPLES,
         help="Create sample pictures to visualize the learning progress (default: %(default)s)",
     )

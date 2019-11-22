@@ -13,10 +13,11 @@ from torch import nn
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
+from . import logger
 from .observations import TARGET_DIRECTORY, load_observations
 
 NUMBER_OF_EPOCHS = 10
-CREATE_PROGRESS_SAMPLES = False
+CREATE_PROGRESS_SAMPLES = True
 SAMPLE_DIR = Path("samples")
 
 
@@ -197,8 +198,11 @@ def precompute_z_values(game):
             z, _, _ = vae.encoder(observation["screen"])
             results.append((z[0], disk_location[0]))
 
+    logger.debug("Precomputed z values")
+
     for z, disk_location in results:
         obj = np.load(disk_location, allow_pickle=True).item()
         obj["z"] = z
         np.save(disk_location, obj)
-        print(".")
+
+    logger.debug("Wrote precomputed z values to .npy files")
