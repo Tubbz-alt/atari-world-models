@@ -14,7 +14,7 @@ from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
 from . import logger
-from .observations import TARGET_DIRECTORY, load_observations
+from .observations import OBSERVATION_DIRECTORY, load_observations
 
 NUMBER_OF_EPOCHS = 10
 CREATE_PROGRESS_SAMPLES = True
@@ -56,16 +56,16 @@ def progress_samples(vae, dataset, game, epoch_number, sample_dir=SAMPLE_DIR):
 
 def train_vae(
     game,
-    source_directory=TARGET_DIRECTORY,
+    observation_directory=OBSERVATION_DIRECTORY,
     number_of_epochs=NUMBER_OF_EPOCHS,
     create_progress_samples=CREATE_PROGRESS_SAMPLES,
 ):
     """ This is the main training loop of the VAE.
 
-    Observations are loaded from *source_directory* and training is performed
+    Observations are loaded from *observation_directory* and training is performed
     for *number_of_epochs* epochs.
     """
-    dataloader, dataset = load_observations(game, source_directory)
+    dataloader, dataset = load_observations(game, observation_directory)
     device = "cpu"
     bs = 32
     vae = VAE().to(device)
@@ -178,7 +178,7 @@ def loss_fn(reconstruction, original, mu, logvar):
 
 
 def precompute_z_values(game):
-    dataloader, dataset = load_observations(game, TARGET_DIRECTORY, batch_size=1)
+    dataloader, dataset = load_observations(game, OBSERVATION_DIRECTORY, batch_size=1)
     device = "cpu"
 
     with torch.no_grad():

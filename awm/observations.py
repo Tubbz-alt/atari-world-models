@@ -18,8 +18,7 @@ from xvfbwrapper import Xvfb
 from . import logger
 from .utils import spread
 
-TARGET_DIRECTORY: Path = Path("data")
-OBSERVATION_DIRECTORY = TARGET_DIRECTORY
+OBSERVATION_DIRECTORY: Path = Path("data")
 NUMBER_OF_PLAYS: int = 1
 STEPS_PER_PLAY: int = 2000
 ACTION_EVERY_STEPS: int = 20
@@ -57,7 +56,7 @@ class Observation:
 def gather_observations_pooled(
     game,
     show_screen=SHOW_SCREEN,
-    target_directory=TARGET_DIRECTORY,
+    observation_directory=OBSERVATION_DIRECTORY,
     number_of_plays=NUMBER_OF_PLAYS,
     steps_per_play=STEPS_PER_PLAY,
     action_every_steps=ACTION_EVERY_STEPS,
@@ -73,7 +72,7 @@ def gather_observations_pooled(
         return (
             game,
             show_screen,
-            target_directory,
+            observation_directory,
             plays,
             steps_per_play,
             action_every_steps,
@@ -103,7 +102,7 @@ def gather_observations_pooled(
 def gather_observations(
     game,
     show_screen,
-    target_directory,
+    observation_directory,
     number_of_plays,
     steps_per_play,
     action_every_steps,
@@ -125,8 +124,8 @@ def gather_observations(
 
     name = multiprocessing.current_process().name
     stamp = datetime.datetime.now().isoformat() + "-" + name
-    target_directory /= game / Path(stamp)
-    target_directory.mkdir(parents=True, exist_ok=True)
+    observation_directory /= game / Path(stamp)
+    observation_directory.mkdir(parents=True, exist_ok=True)
 
     if not show_screen:
         vdisplay = Xvfb()
@@ -164,7 +163,7 @@ def gather_observations(
 
         logger.info("Writing observations to disk")
         for observation in observations:
-            observation.save(target_directory)
+            observation.save(observation_directory)
 
     env.close()
 
@@ -172,7 +171,7 @@ def gather_observations(
         vdisplay.stop()
 
 
-def load_observations(game, source_directory=TARGET_DIRECTORY, batch_size=32):
+def load_observations(game, observation_directory=OBSERVATION_DIRECTORY, batch_size=32):
     def load_and_transform(filename):
         obs_dict = Observation.load_as_dict(filename)
         transform = transforms.Compose(
@@ -181,9 +180,9 @@ def load_observations(game, source_directory=TARGET_DIRECTORY, batch_size=32):
         obs_dict["screen"] = transform(obs_dict["screen"])
         return obs_dict
 
-    source_directory /= game
+    observation_directory /= game
     dataset = datasets.DatasetFolder(
-        root=str(source_directory),
+        root=str(observation_directory),
         loader=load_and_transform,
         extensions=Observation.FILE_EXTENSION,
     )

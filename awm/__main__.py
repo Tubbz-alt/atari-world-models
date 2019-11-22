@@ -48,10 +48,10 @@ Atari games.
         help="CPUs to use in gathering observations (default: %(default)s)",
     )
     observations_parser.add_argument(
-        "--target-directory",
+        "--observation-directory",
         type=Path,
-        default=observations.TARGET_DIRECTORY,
-        help="Path where the images should be saved (default: %(default)s)",
+        default=observations.OBSERVATION_DIRECTORY,
+        help="Path where the observations should be saved (default: %(default)s)",
     )
     observations_parser.add_argument(
         "--number-of-plays",
@@ -78,9 +78,9 @@ Atari games.
         "train-vae", help="Train the VAE", description="Train the VAE"
     )
     train_vae_parser.add_argument(
-        "--source-directory",
-        default=observations.TARGET_DIRECTORY,
-        help="Path to load the images from (default: %(default)s)",
+        "--observation-directory",
+        default=observations.OBSERVATION_DIRECTORY,
+        help="Path to load the observations from (default: %(default)s)",
     )
     train_vae_parser.add_argument(
         "--number-of-epochs",
