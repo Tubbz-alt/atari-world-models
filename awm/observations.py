@@ -28,9 +28,9 @@ CPUS_TO_USE: int = multiprocessing.cpu_count()
 
 
 @dataclass
-class State:
+class Observation:
     filename: str
-    observation: np.array
+    screen: np.array
     action: np.array
     reward: float
     done: bool
@@ -133,7 +133,7 @@ def gather_observations(
 
     for episode in range(number_of_episodes):
         env.reset()
-        states = []
+        observations = []
 
         for step in range(steps_per_episode):
             if step % 100 == 0:
@@ -145,24 +145,23 @@ def gather_observations(
                 action = env.action_space.sample()
 
             # Take a game step
-            observation, reward, done, _ = env.step(action)
+            screen, reward, done, _ = env.step(action)
 
-            # Save observed state
-            state = State(
+            observation = Observation(
                 filename=filename.format(episode, step),
-                observation=observation,
+                screen=screen,
                 action=action,
                 reward=reward,
                 done=done,
             )
-            states.append(state)
+            observations.append(observation)
 
             if done:
                 break
 
-        logger.info("Writing states to disk")
-        for state in states:
-            state.save(target_directory)
+        logger.info("Writing observations to disk")
+        for observation in observations:
+            observation.save(target_directory)
 
     env.close()
 
@@ -172,18 +171,18 @@ def gather_observations(
 
 def load_observations(game, source_directory=TARGET_DIRECTORY, batch_size=32):
     def load_and_transform(filename):
-        state_dict = State.load_as_dict(filename)
+        obs_dict = Observation.load_as_dict(filename)
         transform = transforms.Compose(
             [transforms.ToPILImage(), transforms.Resize((64, 64)), transforms.ToTensor(),]
         )
-        state_dict["observation"] = transform(state_dict["observation"])
-        return state_dict
+        obs_dict["screen"] = transform(obs_dict["screen"])
+        return obs_dict
 
     source_directory /= game
     dataset = datasets.DatasetFolder(
         root=str(source_directory),
         loader=load_and_transform,
-        extensions=State.FILE_EXTENSION,
+        extensions=Observation.FILE_EXTENSION,
     )
     dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
     return dataloader, dataset

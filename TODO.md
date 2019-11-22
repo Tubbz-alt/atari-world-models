@@ -8,8 +8,6 @@
 
 ## Observations
 
-* Rename State to Observation
-* Change "observation" key to "screen"
 * Rename episodes to plays in the context of observation gathering
 * Rename target and source directory to observation directory
 
