@@ -12,7 +12,7 @@ def train_mdn_rnn(
 ):
 
     logger.info("Starting to train the MDN-RNN for game %s", game)
-    dataloader, dataset = load_observations(game, observation_directory)
+    dataloader, dataset = load_observations(game, observation_directory, drop_z_values=False)
 
     device = "cpu"
     # bs = 32

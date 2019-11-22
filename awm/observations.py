@@ -36,7 +36,7 @@ class Observation:
 
     # Filled in later by precompute-z-values
     # FIXME: This is a typing violation
-    z: np.array = 0.0
+    z: np.array = None
 
     disk_location: str = ""
 
@@ -171,13 +171,17 @@ def gather_observations(
         vdisplay.stop()
 
 
-def load_observations(game, observation_directory=OBSERVATION_DIRECTORY, batch_size=32):
+def load_observations(
+    game, observation_directory=OBSERVATION_DIRECTORY, batch_size=32, drop_z_values=True
+):
     def load_and_transform(filename):
         obs_dict = Observation.load_as_dict(filename)
         transform = transforms.Compose(
             [transforms.ToPILImage(), transforms.Resize((64, 64)), transforms.ToTensor(),]
         )
         obs_dict["screen"] = transform(obs_dict["screen"])
+        if drop_z_values:
+            del obs_dict["z"]
         return obs_dict
 
     observation_directory /= game
