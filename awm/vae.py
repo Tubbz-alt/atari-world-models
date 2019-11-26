@@ -15,6 +15,7 @@ from torchvision.utils import save_image
 
 from . import logger
 from .observations import OBSERVATION_DIRECTORY, load_observations
+from .utils import StateSavingMixin
 
 NUMBER_OF_EPOCHS = 10
 CREATE_PROGRESS_SAMPLES = True
@@ -71,11 +72,7 @@ def train_vae(
     vae = VAE().to(device)
     optimizer = torch.optim.Adam(vae.parameters())
 
-    # If there is a state file - load it
-    models_dir = Path("models")
-    state_file = models_dir / Path("{}-vae.torch".format(game))
-    if state_file.is_file():
-        vae.load_state_dict(torch.load(str(state_file), map_location=device))
+    vae.load_state(game)
 
     for epoch in range(number_of_epochs):
         cumulative_loss = 0.0
@@ -92,11 +89,10 @@ def train_vae(
         if create_progress_samples:
             progress_samples(vae, dataset, game, epoch)
 
-    models_dir.mkdir(parents=True, exist_ok=True)
-    torch.save(vae.state_dict(), str(state_file))
+    vae.save_state(game)
 
 
-class VAE(nn.Module):
+class VAE(StateSavingMixin, nn.Module):
     def __init__(self):
         super().__init__()
         # See World Models paper - Appendix A.1 Variational Autoencoder
