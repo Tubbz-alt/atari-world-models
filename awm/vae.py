@@ -1,6 +1,7 @@
 import os
 import random
 import time
+from itertools import zip_longest
 from pathlib import Path
 
 import gym
@@ -174,20 +175,17 @@ def loss_fn(reconstruction, original, mu, logvar):
 
 
 def precompute_z_values(game):
-    dataloader, dataset = load_observations(game, OBSERVATION_DIRECTORY, batch_size=1)
+    dataloader, dataset = load_observations(
+        game, OBSERVATION_DIRECTORY, batch_size=1, shuffle=False
+    )
     device = "cpu"
 
     with torch.no_grad():
 
         vae = VAE().to(device)
+        vae.load_state(game)
 
-        # If there is a state file - load it
-        models_dir = Path("models")
-        state_file = models_dir / Path("{}-vae.torch".format(game))
-        if state_file.is_file():
-            vae.load_state_dict(torch.load(str(state_file), map_location=device))
-
-        # contains (z, disk_location) tuples
+        # Will be filled with (z, disk_location) tuples
         results = []
         for idx, (observation, _) in enumerate(dataloader):
             disk_location = observation["disk_location"]
@@ -196,9 +194,15 @@ def precompute_z_values(game):
 
     logger.debug("Precomputed z values")
 
-    for z, disk_location in results:
+    # combine z and the next z value
+    results = zip_longest(
+        results, results[1:], fillvalue=(torch.zeros(32), "invalid-path")
+    )
+
+    for ((z, disk_location), (next_z, next_disk_location)) in results:
         obj = np.load(disk_location, allow_pickle=True).item()
         obj["z"] = z
+        obj["next_z"] = next_z
         np.save(disk_location, obj)
 
     logger.debug("Wrote precomputed z values to .npy files")

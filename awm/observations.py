@@ -37,6 +37,7 @@ class Observation:
     # Filled in later by precompute-z-values
     # FIXME: This is a typing violation
     z: np.array = None
+    next_z: np.array = None
 
     disk_location: str = ""
 
@@ -172,8 +173,17 @@ def gather_observations(
 
 
 def load_observations(
-    game, observation_directory=OBSERVATION_DIRECTORY, batch_size=32, drop_z_values=True
+    game,
+    observation_directory=OBSERVATION_DIRECTORY,
+    batch_size=32,
+    drop_z_values=True,
+    shuffle=True,
 ):
+    """ Load observations from disk and return a dataset and dataloader.
+
+    Observations are loaded from *observation_directory*.
+    """
+
     def load_and_transform(filename):
         obs_dict = Observation.load_as_dict(filename)
         transform = transforms.Compose(
@@ -182,6 +192,7 @@ def load_observations(
         obs_dict["screen"] = transform(obs_dict["screen"])
         if drop_z_values:
             del obs_dict["z"]
+            del obs_dict["next_z"]
         return obs_dict
 
     observation_directory /= game
@@ -190,5 +201,5 @@ def load_observations(
         loader=load_and_transform,
         extensions=Observation.FILE_EXTENSION,
     )
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=True)
+    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
     return dataloader, dataset
