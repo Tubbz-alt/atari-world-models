@@ -20,4 +20,4 @@ del logging_handler
 del formatter
 
 # Make torch behaviour more reproducible
-torch.manual_seed(0)
+# torch.manual_seed(0)
