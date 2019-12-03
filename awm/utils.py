@@ -3,6 +3,8 @@ from pathlib import Path
 
 import torch
 
+from . import MODELS_DIR
+
 logger = logging.getLogger(__name__)
 
 
@@ -20,20 +22,19 @@ def spread(n, number_of_bins):
 
 
 class StateSavingMixin:
-    def _build_filename(self, game, stamp):
+    def _build_filename(self, stamp):
         if stamp is None:
-            filename = "{}-{}.torch".format(game, self.__class__.__name__.lower())
+            filename = "{}.torch".format(self.__class__.__name__.lower())
         else:
-            filename = "{}-{}-{}.torch".format(
-                game, self.__class__.__name__.lower(), stamp
+            filename = "{}-{}.torch".format(
+                self.__class__.__name__.lower(), stamp
             )
         return filename
 
     def load_state(self, game, stamp=None):
         # If there is a state file - load it
         device = "cpu"
-        models_dir = Path("models")
-        state_file = models_dir / Path(self._build_filename(game, stamp))
+        state_file = MODELS_DIR / Path(game) / self._build_filename(stamp)
         if state_file.is_file():
             logger.info(
                 "%s: Loading state for %s with stamp %s",
@@ -47,7 +48,7 @@ class StateSavingMixin:
         logger.info(
             "%s: Saving state for %s with stamp %s", self.__class__.__name__, game, stamp
         )
-        models_dir = Path("models")
-        models_dir.mkdir(parents=True, exist_ok=True)
-        state_file = models_dir / Path(self._build_filename(game, stamp))
+        state_dir = MODELS_DIR / Path(game)
+        state_dir.mkdir(parents=True, exist_ok=True)
+        state_file = state_dir / self._build_filename(stamp)
         torch.save(self.state_dict(), str(state_file))

@@ -16,9 +16,10 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
+from . import OBSERVATIONS_DIR
 from .utils import spread
 
-OBSERVATION_DIRECTORY: Path = Path("data")
+
 NUMBER_OF_PLAYS: int = 1
 STEPS_PER_PLAY: int = 2000
 ACTION_EVERY_STEPS: int = 20
@@ -59,7 +60,7 @@ class Observation:
 def gather_observations_pooled(
     game,
     show_screen=SHOW_SCREEN,
-    observation_directory=OBSERVATION_DIRECTORY,
+    observations_directory=OBSERVATIONS_DIR,
     number_of_plays=NUMBER_OF_PLAYS,
     steps_per_play=STEPS_PER_PLAY,
     action_every_steps=ACTION_EVERY_STEPS,
@@ -75,7 +76,7 @@ def gather_observations_pooled(
         return (
             game,
             show_screen,
-            observation_directory,
+            observations_directory,
             plays,
             steps_per_play,
             action_every_steps,
@@ -105,7 +106,7 @@ def gather_observations_pooled(
 def gather_observations(
     game,
     show_screen,
-    observation_directory,
+    observations_directory,
     number_of_plays,
     steps_per_play,
     action_every_steps,
@@ -127,8 +128,8 @@ def gather_observations(
 
     name = multiprocessing.current_process().name
     stamp = datetime.datetime.now().isoformat() + "-" + name
-    observation_directory /= game / Path(stamp)
-    observation_directory.mkdir(parents=True, exist_ok=True)
+    observations_directory /= game / Path(stamp)
+    observations_directory.mkdir(parents=True, exist_ok=True)
 
     if not show_screen:
         vdisplay = Xvfb()
@@ -166,7 +167,7 @@ def gather_observations(
 
         logger.info("Writing observations to disk")
         for observation in observations:
-            observation.save(observation_directory)
+            observation.save(observations_directory)
 
     env.close()
 
@@ -176,14 +177,14 @@ def gather_observations(
 
 def load_observations(
     game,
-    observation_directory=OBSERVATION_DIRECTORY,
+    observations_directory=OBSERVATIONS_DIR,
     batch_size=32,
     drop_z_values=True,
     shuffle=True,
 ):
     """ Load observations from disk and return a dataset and dataloader.
 
-    Observations are loaded from *observation_directory*.
+    Observations are loaded from *observations_directory*.
     """
 
     def load_and_transform(filename):
@@ -197,9 +198,9 @@ def load_observations(
             del obs_dict["next_z"]
         return obs_dict
 
-    observation_directory /= game
+    observations_directory /= game
     dataset = datasets.DatasetFolder(
-        root=str(observation_directory),
+        root=str(observations_directory),
         loader=load_and_transform,
         extensions=Observation.FILE_EXTENSION,
     )

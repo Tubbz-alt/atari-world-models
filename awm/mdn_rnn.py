@@ -8,8 +8,8 @@ from torch import nn
 from torch.distributions import Normal
 from torchvision.utils import save_image
 
-from . import SAMPLES_PATH
-from .observations import OBSERVATION_DIRECTORY, load_observations
+from . import SAMPLES_DIR, OBSERVATIONS_DIR
+from .observations import load_observations
 from .utils import StateSavingMixin
 from .vae import VAE
 
@@ -23,7 +23,7 @@ def progress_samples(game, dataset, mdn_rnn, epoch):
     """ Create progress samples to visualize the progress of our MDN-RNN.
     """
 
-    samples_dir = SAMPLES_PATH / Path(game)
+    samples_dir = SAMPLES_DIR / Path(game)
     samples_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Writing MDN_RNN progress samples for game %s", game)
@@ -87,7 +87,7 @@ def loss_function(pi, sigma, mu, target):
 
 def train_mdn_rnn(
     game,
-    observation_directory=OBSERVATION_DIRECTORY,
+    observation_directory=OBSERVATIONS_DIR,
     create_progress_samples=CREATE_PROGRESS_SAMPLES,
     number_of_epochs=NUMBER_OF_EPOCHS,
 ):

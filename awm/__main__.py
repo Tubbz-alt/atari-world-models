@@ -3,7 +3,7 @@ import logging
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
-from . import SUPPORTED_GAMES, VERSION, controller, mdn_rnn, observations, vae
+from . import SUPPORTED_GAMES, VERSION, controller, mdn_rnn, observations, vae, OBSERVATIONS_DIR
 from .controller import train_controller
 from .mdn_rnn import train_mdn_rnn
 from .observations import gather_observations_pooled
@@ -50,9 +50,9 @@ Atari games.
         help="CPUs to use in gathering observations (default: %(default)s)",
     )
     observations_parser.add_argument(
-        "--observation-directory",
+        "--observations-directory",
         type=Path,
-        default=observations.OBSERVATION_DIRECTORY,
+        default=OBSERVATIONS_DIR,
         help="Path where the observations should be saved (default: %(default)s)",
     )
     observations_parser.add_argument(
@@ -80,8 +80,8 @@ Atari games.
         "train-vae", help="Train the VAE", description="Train the VAE"
     )
     train_vae_parser.add_argument(
-        "--observation-directory",
-        default=observations.OBSERVATION_DIRECTORY,
+        "--observations-directory",
+        default=OBSERVATIONS_DIR,
         help="Path to load the observations from (default: %(default)s)",
     )
     train_vae_parser.add_argument(

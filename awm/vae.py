@@ -15,25 +15,25 @@ from torch import nn
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
-from .observations import OBSERVATION_DIRECTORY, load_observations
+from .observations import load_observations
 from .utils import StateSavingMixin
+from . import SAMPLES_DIR, OBSERVATIONS_DIR
 
 NUMBER_OF_EPOCHS = 10
 CREATE_PROGRESS_SAMPLES = True
-SAMPLE_DIR = Path("samples")
 
 logger = logging.getLogger(__name__)
 
 
-def progress_samples(vae, dataset, game, epoch_number, sample_dir=SAMPLE_DIR):
+def progress_samples(vae, dataset, game, epoch_number):
     """ Generate sample pictures that help visualize the training
     progress.
     """
-    sample_dir /= Path(game)
-    sample_dir.mkdir(parents=True, exist_ok=True)
+    samples_dir = SAMPLES_DIR / Path(game)
+    samples_dir.mkdir(parents=True, exist_ok=True)
 
-    filename_repr = sample_dir / "repr_{}.png".format(epoch_number)
-    filename_rand = sample_dir / "rand_{}.png".format(epoch_number)
+    filename_repr = samples_dir / "vae_repr_{}.png".format(epoch_number)
+    filename_rand = samples_dir / "vae_rand_{}.png".format(epoch_number)
 
     # Select 32 random images from dataset and display them next to their
     # VAE representation
@@ -60,16 +60,16 @@ def progress_samples(vae, dataset, game, epoch_number, sample_dir=SAMPLE_DIR):
 
 def train_vae(
     game,
-    observation_directory=OBSERVATION_DIRECTORY,
+    observations_directory=OBSERVATIONS_DIR,
     number_of_epochs=NUMBER_OF_EPOCHS,
     create_progress_samples=CREATE_PROGRESS_SAMPLES,
 ):
     """ This is the main training loop of the VAE.
 
-    Observations are loaded from *observation_directory* and training is performed
+    Observations are loaded from *observations_directory* and training is performed
     for *number_of_epochs* epochs.
     """
-    dataloader, dataset = load_observations(game, observation_directory)
+    dataloader, dataset = load_observations(game, observations_directory)
     device = "cpu"
     bs = 32
     vae = VAE().to(device)
@@ -178,7 +178,7 @@ def loss_fn(reconstruction, original, mu, logvar):
 
 def precompute_z_values(game):
     dataloader, dataset = load_observations(
-        game, OBSERVATION_DIRECTORY, batch_size=1, shuffle=False
+        game, OBSERVATIONS_DIR, batch_size=1, shuffle=False
     )
     device = "cpu"
 

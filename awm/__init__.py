@@ -5,10 +5,11 @@ import torch
 
 VERSION = (0, 0, 1)
 SUPPORTED_GAMES = (
-    "Pong-v0",
     "CarRacing-v0",
 )
-SAMPLES_PATH = Path("samples")
+SAMPLES_DIR : Path = Path("samples")
+OBSERVATIONS_DIR : Path = Path("observations")
+MODELS_DIR : Path = Path("models")
 
 logging.basicConfig(
     format="%(asctime)s %(name)s %(levelname)s: %(message)s",
