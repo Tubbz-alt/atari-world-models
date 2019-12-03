@@ -17,7 +17,7 @@ from torchvision.utils import save_image
 
 from .observations import load_observations
 from .utils import StateSavingMixin
-from . import SAMPLES_DIR, OBSERVATIONS_DIR
+from . import SAMPLES_DIR, OBSERVATIONS_DIR, DEVICE
 
 NUMBER_OF_EPOCHS = 10
 CREATE_PROGRESS_SAMPLES = True
@@ -70,9 +70,8 @@ def train_vae(
     for *number_of_epochs* epochs.
     """
     dataloader, dataset = load_observations(game, observations_directory)
-    device = "cpu"
     bs = 32
-    vae = VAE().to(device)
+    vae = VAE().to(DEVICE)
     optimizer = torch.optim.Adam(vae.parameters())
 
     vae.load_state(game)
@@ -180,11 +179,9 @@ def precompute_z_values(game):
     dataloader, dataset = load_observations(
         game, OBSERVATIONS_DIR, batch_size=1, shuffle=False
     )
-    device = "cpu"
-
     with torch.no_grad():
 
-        vae = VAE().to(device)
+        vae = VAE().to(DEVICE)
         vae.load_state(game)
 
         # Will be filled with (z, disk_location) tuples

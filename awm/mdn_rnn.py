@@ -8,7 +8,7 @@ from torch import nn
 from torch.distributions import Normal
 from torchvision.utils import save_image
 
-from . import SAMPLES_DIR, OBSERVATIONS_DIR
+from . import SAMPLES_DIR, OBSERVATIONS_DIR, DEVICE
 from .observations import load_observations
 from .utils import StateSavingMixin
 from .vae import VAE
@@ -27,9 +27,8 @@ def progress_samples(game, dataset, mdn_rnn, epoch):
     samples_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Writing MDN_RNN progress samples for game %s", game)
-    device = "cpu"
     with torch.no_grad():
-        vae = VAE().to(device)
+        vae = VAE().to(DEVICE)
         vae.load_state(game)
 
         images = None
@@ -97,9 +96,7 @@ def train_mdn_rnn(
         game, observation_directory, drop_z_values=False
     )
 
-    device = "cpu"
-
-    mdn_rnn = MDN_RNN().to(device)
+    mdn_rnn = MDN_RNN().to(DEVICE)
     mdn_rnn.load_state(game)
 
     optimizer = torch.optim.Adam(mdn_rnn.parameters(), lr=1e-3)

@@ -3,7 +3,7 @@ from pathlib import Path
 
 import torch
 
-from . import MODELS_DIR
+from . import MODELS_DIR, DEVICE
 
 logger = logging.getLogger(__name__)
 
@@ -33,7 +33,6 @@ class StateSavingMixin:
 
     def load_state(self, game, stamp=None):
         # If there is a state file - load it
-        device = "cpu"
         state_file = MODELS_DIR / Path(game) / self._build_filename(stamp)
         if state_file.is_file():
             logger.info(
@@ -42,7 +41,7 @@ class StateSavingMixin:
                 game,
                 stamp,
             )
-            self.load_state_dict(torch.load(str(state_file), map_location=device))
+            self.load_state_dict(torch.load(str(state_file), map_location=DEVICE))
 
     def save_state(self, game, stamp=None):
         logger.info(
