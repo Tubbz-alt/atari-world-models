@@ -1,14 +1,25 @@
 # Atari World Models
 
-[![Build Status](https://travis-ci.com/chsigi/atari-world-models.svg?branch=master)](https://travis-ci.com/chsigi/atari-world-models)
-
-![VAE Output](/images/carracing-vae.png?raw=true "VAE Output")
-
 **Type:** Bring your own method (and a somewhat different dataset)
 
 **Topic:** Deep Reinforcement Learning
 
-## Summary
+[![Build Status](https://travis-ci.com/chsigi/atari-world-models.svg?branch=master)](https://travis-ci.com/chsigi/atari-world-models)
+
+# Quick preview
+
+## VAE
+![VAE Output](/images/carracing-vae.png?raw=true "VAE Output")
+
+## MDN-RNN
+
+Coming soon ...
+
+## Controller
+
+Coming soon ...
+
+# Summary
 
 This project attempts to recreate the approach described in the first part of
 the ["World Models"](https://arxiv.org/abs/1803.10122) paper.  According to the
@@ -67,11 +78,11 @@ and gradually improve the network.
     - [x] <a name="t-broad-topic"></a>**Find a broad topic**
         - [x] Get an overview of Deep Reinforcement Learning approaches
     - [x] <a name="t-specific-topic"></a>**Find a specific topic**
-    - [ ] <a name="t-lit-research"></a>**Literature and tutorial research / reading**
+    - [x] <a name="t-lit-research"></a>**Literature and tutorial research / reading**
         - [x] Read "World Models" paper
         - [x] Read "Playing Atari with ..." paper
         - [x] Read "Revisiting the ..." paper
-        - [ ] Read "OpenAI Gym" paper
+        - [x] Read "OpenAI Gym" paper
     - [x] <a name="t-del-ex1"></a>**Deliverables for Exercise 1**
         - [x] Create repository on github
         - [x] Create development environment
@@ -85,9 +96,9 @@ and gradually improve the network.
         - [ ] Generate data to use for plots/figures
     - [ ] <a name="t-implement"></a>**Implement approach from paper**
         - [x] Implement the observation gathering
-        - [~] Implement and train the VAE part
-        - [ ] Implement and train the RNN + MDN part
-        - [ ] Implement and train the Controller + CMA-ES part
+        - [x] Implement the VAE part
+        - [x] Implement the RNN + MDN part
+        - [x] Implement the Controller + CMA-ES part
         - [ ] Try to replicate the findings in the paper with pong
     - [ ] <a name="t-fine-tune"></a>**Try other games and fine-tune**
         - [ ] Training runs
