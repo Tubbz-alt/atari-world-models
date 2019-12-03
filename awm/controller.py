@@ -1,5 +1,6 @@
 import logging
 import multiprocessing
+import queue
 from multiprocessing import Event, Process, Queue
 
 import cma
@@ -8,28 +9,36 @@ import torch
 from torch import nn
 from xvfbwrapper import Xvfb
 
+from . import MODELS_DIR
 from .mdn_rnn import MDN_RNN
-from .utils import StateSavingMixin
+from .utils import StateSavingMixin, Step
 
 REWARD_THRESHOLD = 600
 SHOW_SCREEN = False
+STEP_LIMIT = 0
 
 logger = logging.getLogger(__name__)
 
 
-def worker(game, solution_q, reward_q, stop, show_screen):
-    from .play import play_game
+def worker(game, solution_q, reward_q, stop, show_screen, models_dir, step_limit):
+    from .play import PlayGame
+
+    play_game = PlayGame(game)
 
     if not show_screen:
         vdisplay = Xvfb()
         vdisplay.start()
 
     while not stop.is_set():
-        (solution_id, solution) = solution_q.get()
-        name = multiprocessing.current_process().name
-        logger.info("%s started working on %s", name, solution_id)
-        reward = play_game(game, solution)
-        reward_q.put((solution_id, reward))
+        try:
+            (solution_id, solution) = solution_q.get(False, 0.1)
+        except queue.Empty:
+            pass
+        else:
+            name = multiprocessing.current_process().name
+            logger.info("%s started working on %s", name, solution_id)
+            reward = play_game(solution, models_dir=models_dir, step_limit=step_limit)
+            reward_q.put((solution_id, reward))
 
     if not show_screen:
         vdisplay.stop()
@@ -56,96 +65,115 @@ def get_best_averaged(solution_q, reward_q, solutions, rewards):
     return best_solution, np.mean(rewards)
 
 
-def train_controller(game, reward_threshold=REWARD_THRESHOLD, show_screen=SHOW_SCREEN):
-    logger.info("Training the controller for game %s", game)
+class TrainController(Step):
+    def __call__(
+        self,
+        reward_threshold=REWARD_THRESHOLD,
+        show_screen=SHOW_SCREEN,
+        step_limit=STEP_LIMIT,
+    ):
+        logger.info("Training the controller for game %s", self.game)
 
-    controller = Controller()
-    controller.load_state(game, stamp=53)
+        controller = Controller(models_dir=self.models_dir)
+        controller.load_state(self.game, stamp=53)
 
-    # action:
-    # 0: steering -1 -> 1
-    # 1: gas 0 -> 1
-    # 2: break 0 -> 1
+        # action:
+        # 0: steering -1 -> 1
+        # 1: gas 0 -> 1
+        # 2: break 0 -> 1
 
-    parameters = next(controller.parameters())
-    sigma = 0.1
-    population_size = 10
+        parameters = next(controller.parameters())
+        sigma = 0.1
+        population_size = 10
 
-    es = cma.CMAEvolutionStrategy(
-        parameters.view(-1).detach(), sigma, {"popsize": population_size}
-    )
+        es = cma.CMAEvolutionStrategy(
+            parameters.view(-1).detach(), sigma, {"popsize": population_size}
+        )
 
-    epoch = 0
-    do_eval = 3
+        epoch = 0
+        do_eval = 2  # evaluate every other epoch
 
-    solution_q = Queue()
-    reward_q = Queue()
-    stop = Event()
-    for _ in range(multiprocessing.cpu_count()):
-        Process(
-            target=worker, args=(game, solution_q, reward_q, stop, show_screen)
-        ).start()
+        solution_q = Queue()
+        reward_q = Queue()
+        stop = Event()
+        for _ in range(multiprocessing.cpu_count()):
+            Process(
+                target=worker,
+                args=(
+                    self.game,
+                    solution_q,
+                    reward_q,
+                    stop,
+                    show_screen,
+                    self.models_dir,
+                    step_limit,
+                ),
+            ).start()
 
-    highest_reward = None
+        highest_reward = None
 
-    while not es.stop():
-        # solutions is a list containing *population_size* numpy arrays
-        # with proposed parameters
-        solutions = es.ask()
+        while not es.stop():
+            # solutions is a list containing *population_size* numpy arrays
+            # with proposed parameters
+            solutions = es.ask()
 
-        # Turn into dict with index as key - this makes it easier to match
-        # the reward to the solution.
-        solutions = dict(enumerate(solutions))
+            # Turn into dict with index as key - this makes it easier to match
+            # the reward to the solution.
+            solutions = dict(enumerate(solutions))
 
-        logger.info("Submitting solutions")
-        for solution_id, solution in solutions.items():
-            solution_q.put((solution_id, solution))
+            logger.info("Submitting solutions")
+            for solution_id, solution in solutions.items():
+                solution_q.put((solution_id, solution))
 
-        logger.info("Collecting rewards")
-        rewards = {}
-        for _ in range(len(solutions)):
-            solution_id, reward = reward_q.get()
-            rewards[solution_id] = reward
+            logger.info("Collecting rewards")
+            rewards = {}
+            for _ in range(len(solutions)):
+                solution_id, reward = reward_q.get()
+                rewards[solution_id] = reward
 
-        def sorted_values(dict_):
-            result = []
-            for key in sorted(dict_.keys()):
-                result.append(dict_[key])
-            return result
+            def sorted_values(dict_):
+                result = []
+                for key in sorted(dict_.keys()):
+                    result.append(dict_[key])
+                return result
 
-        # Our function we want to fit is the game we are playing
-        logger.info("**************************")
-        logger.info("rewards: %s", rewards)
-        logger.info("**************************")
-        es.tell(sorted_values(solutions), sorted_values(rewards))
-        es.disp()
+            # Our function we want to fit is the game we are playing
+            logger.info("**************************")
+            logger.info("rewards: %s", rewards)
+            print("rewards: %s", rewards)
+            logger.info("**************************")
+            es.tell(sorted_values(solutions), sorted_values(rewards))
+            es.disp()
 
-        # evaluation and saving
-        if epoch % do_eval == do_eval - 1:
-            solution, reward = get_best_averaged(solution_q, reward_q, solutions, rewards)
+            # evaluation and saving
+            if epoch % do_eval == do_eval - 1:
+                solution, reward = get_best_averaged(
+                    solution_q, reward_q, solutions, rewards
+                )
 
-            if highest_reward is None or highest_reward > reward:
-                highest_reward = reward
-                logger.info("Found new highest reward: %s", highest_reward)
+                if highest_reward is None or highest_reward > reward:
+                    highest_reward = reward
+                    logger.info("Found new highest reward: %s", highest_reward)
 
-                # Load solution into controller and then save controller state
-                # to disk
-                controller = Controller()
-                controller.load_solution(solution)
-                controller.save_state(game, stamp=str(epoch))
+                    # Load solution into controller and then save controller state
+                    # to disk
+                    controller = Controller(models_dir=self.models_dir)
+                    controller.load_solution(solution)
+                    controller.save_state(self.game, stamp=str(epoch))
 
-            if highest_reward and highest_reward < reward_threshold:
-                break
+                if highest_reward and highest_reward <= reward_threshold:
+                    break
 
-        epoch += 1
+            epoch += 1
 
-    # Signal stop to all workers
-    stop.set()
+        # Signal stop to all workers
+        stop.set()
 
 
 class Controller(StateSavingMixin, nn.Module):
-    def __init__(self):
+    def __init__(self, models_dir=MODELS_DIR):
         super().__init__()
+        self.models_dir = models_dir
         action_size = 3
         z_size = 32
         hidden_size = 256

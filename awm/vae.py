@@ -1,6 +1,6 @@
+import logging
 import os
 import random
-import logging
 import time
 from itertools import zip_longest
 from pathlib import Path
@@ -15,9 +15,9 @@ from torch import nn
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
+from . import DEVICE, MODELS_DIR
 from .observations import load_observations
-from .utils import StateSavingMixin
-from . import SAMPLES_DIR, OBSERVATIONS_DIR, DEVICE
+from .utils import StateSavingMixin, Step
 
 NUMBER_OF_EPOCHS = 10
 CREATE_PROGRESS_SAMPLES = True
@@ -25,11 +25,11 @@ CREATE_PROGRESS_SAMPLES = True
 logger = logging.getLogger(__name__)
 
 
-def progress_samples(vae, dataset, game, epoch_number):
+def progress_samples(vae, dataset, game, epoch_number, samples_dir):
     """ Generate sample pictures that help visualize the training
     progress.
     """
-    samples_dir = SAMPLES_DIR / Path(game)
+    samples_dir = samples_dir / Path(game)
     samples_dir.mkdir(parents=True, exist_ok=True)
 
     filename_repr = samples_dir / "vae_repr_{}.png".format(epoch_number)
@@ -58,45 +58,46 @@ def progress_samples(vae, dataset, game, epoch_number):
         save_image(result, filename_rand)
 
 
-def train_vae(
-    game,
-    observations_directory=OBSERVATIONS_DIR,
-    number_of_epochs=NUMBER_OF_EPOCHS,
-    create_progress_samples=CREATE_PROGRESS_SAMPLES,
-):
-    """ This is the main training loop of the VAE.
+class TrainVAE(Step):
+    def __call__(
+        self,
+        number_of_epochs=NUMBER_OF_EPOCHS,
+        create_progress_samples=CREATE_PROGRESS_SAMPLES,
+    ):
+        """ This is the main training loop of the VAE.
 
-    Observations are loaded from *observations_directory* and training is performed
-    for *number_of_epochs* epochs.
-    """
-    dataloader, dataset = load_observations(game, observations_directory)
-    bs = 32
-    vae = VAE().to(DEVICE)
-    optimizer = torch.optim.Adam(vae.parameters())
+        Observations are loaded from *observations_dir* and training is performed
+        for *number_of_epochs* epochs.
+        """
+        dataloader, dataset = load_observations(self.game, self.observations_dir)
+        bs = 32
+        vae = VAE(self.models_dir).to(DEVICE)
+        optimizer = torch.optim.Adam(vae.parameters())
 
-    vae.load_state(game)
+        vae.load_state(self.game)
 
-    for epoch in range(number_of_epochs):
-        cumulative_loss = 0.0
-        for idx, (states, _) in enumerate(dataloader):
-            images = states["screen"]
-            optimizer.zero_grad()
-            reconstructions, mu, logvar = vae(images)
-            loss, bce, kld = loss_fn(reconstructions, images, mu, logvar)
-            loss.backward()
-            optimizer.step()
-            cumulative_loss += loss.data / bs
+        for epoch in range(number_of_epochs):
+            cumulative_loss = 0.0
+            for idx, (states, _) in enumerate(dataloader):
+                images = states["screen"]
+                optimizer.zero_grad()
+                reconstructions, mu, logvar = vae(images)
+                loss, bce, kld = loss_fn(reconstructions, images, mu, logvar)
+                loss.backward()
+                optimizer.step()
+                cumulative_loss += loss.data / bs
 
-        print("{:04}: {:.3f}".format(epoch, cumulative_loss / len(dataloader)))
-        if create_progress_samples:
-            progress_samples(vae, dataset, game, epoch)
+            logger.info("%s: %s", epoch, cumulative_loss / len(dataloader))
+            if create_progress_samples:
+                progress_samples(vae, dataset, self.game, epoch, self.samples_dir)
 
-    vae.save_state(game)
+        vae.save_state(self.game)
 
 
 class VAE(StateSavingMixin, nn.Module):
-    def __init__(self):
+    def __init__(self, models_dir=MODELS_DIR):
         super().__init__()
+        self.models_dir = models_dir
         # See World Models paper - Appendix A.1 Variational Autoencoder
         self.encode = nn.Sequential(
             nn.Conv2d(3, 32, kernel_size=4, stride=2),
@@ -175,33 +176,34 @@ def loss_fn(reconstruction, original, mu, logvar):
     return BCE + KLD, BCE, KLD
 
 
-def precompute_z_values(game):
-    dataloader, dataset = load_observations(
-        game, OBSERVATIONS_DIR, batch_size=1, shuffle=False
-    )
-    with torch.no_grad():
+class PrecomputeZValues(Step):
+    def __call__(self):
+        dataloader, dataset = load_observations(
+            self.game, self.observations_dir, batch_size=1, shuffle=False
+        )
+        with torch.no_grad():
 
-        vae = VAE().to(DEVICE)
-        vae.load_state(game)
+            vae = VAE(self.models_dir).to(DEVICE)
+            vae.load_state(self.game)
 
-        # Will be filled with (z, disk_location) tuples
-        results = []
-        for idx, (observation, _) in enumerate(dataloader):
-            disk_location = observation["disk_location"]
-            z, _, _ = vae.encoder(observation["screen"])
-            results.append((z[0], disk_location[0]))
+            # Will be filled with (z, disk_location) tuples
+            results = []
+            for idx, (observation, _) in enumerate(dataloader):
+                disk_location = observation["disk_location"]
+                z, _, _ = vae.encoder(observation["screen"])
+                results.append((z[0], disk_location[0]))
 
-    logger.debug("Precomputed z values")
+        logger.debug("Precomputed z values")
 
-    # combine z and the next z value
-    results = zip_longest(
-        results, results[1:], fillvalue=(torch.zeros(32), "invalid-path")
-    )
+        # combine z and the next z value
+        results = zip_longest(
+            results, results[1:], fillvalue=(torch.zeros(32), "invalid-path")
+        )
 
-    for ((z, disk_location), (next_z, next_disk_location)) in results:
-        obj = np.load(disk_location, allow_pickle=True).item()
-        obj["z"] = z
-        obj["next_z"] = next_z
-        np.save(disk_location, obj)
+        for ((z, disk_location), (next_z, next_disk_location)) in results:
+            obj = np.load(disk_location, allow_pickle=True).item()
+            obj["z"] = z
+            obj["next_z"] = next_z
+            np.save(disk_location, obj)
 
-    logger.debug("Wrote precomputed z values to .npy files")
+        logger.debug("Wrote precomputed z values to .npy files")

@@ -8,9 +8,9 @@ from torch import nn
 from torch.distributions import Normal
 from torchvision.utils import save_image
 
-from . import SAMPLES_DIR, OBSERVATIONS_DIR, DEVICE
+from . import DEVICE, MODELS_DIR, OBSERVATIONS_DIR, SAMPLES_DIR
 from .observations import load_observations
-from .utils import StateSavingMixin
+from .utils import StateSavingMixin, Step
 from .vae import VAE
 
 CREATE_PROGRESS_SAMPLES = True
@@ -84,56 +84,56 @@ def loss_function(pi, sigma, mu, target):
     return torch.mean(result)
 
 
-def train_mdn_rnn(
-    game,
-    observation_directory=OBSERVATIONS_DIR,
-    create_progress_samples=CREATE_PROGRESS_SAMPLES,
-    number_of_epochs=NUMBER_OF_EPOCHS,
-):
+class TrainMDNRNN(Step):
+    def __call__(
+        self,
+        create_progress_samples=CREATE_PROGRESS_SAMPLES,
+        number_of_epochs=NUMBER_OF_EPOCHS,
+    ):
+        logger.info("Starting to train the MDN-RNN for game %s", self.game)
+        dataloader, dataset = load_observations(
+            self.game, self.observations_dir, drop_z_values=False
+        )
 
-    logger.info("Starting to train the MDN-RNN for game %s", game)
-    dataloader, dataset = load_observations(
-        game, observation_directory, drop_z_values=False
-    )
+        mdn_rnn = MDN_RNN(self.models_dir).to(DEVICE)
+        mdn_rnn.load_state(self.game)
 
-    mdn_rnn = MDN_RNN().to(DEVICE)
-    mdn_rnn.load_state(game)
+        optimizer = torch.optim.Adam(mdn_rnn.parameters(), lr=1e-3)
 
-    optimizer = torch.optim.Adam(mdn_rnn.parameters(), lr=1e-3)
+        mini_batch_size = 1
 
-    mini_batch_size = 1
+        for epoch in range(number_of_epochs):
+            cumulative_loss = 0.0
+            for idx, (observations, _) in enumerate(dataloader):
+                optimizer.zero_grad()
+                mdn_rnn.set_hidden_state()
 
-    for epoch in range(number_of_epochs):
-        cumulative_loss = 0.0
-        for idx, (observations, _) in enumerate(dataloader):
-            optimizer.zero_grad()
-            mdn_rnn.set_hidden_state()
+                z_vectors = observations["z"]
+                actions = observations["action"]
 
-            z_vectors = observations["z"]
-            actions = observations["action"]
+                # Add mini-batch dimension size 1
+                actions = actions[:, None, :]
+                z_vectors = z_vectors[:, None, :]
+                pi, sigma, mu, _ = mdn_rnn(z_vectors, actions)
 
-            # Add mini-batch dimension size 1
-            actions = actions[:, None, :]
-            z_vectors = z_vectors[:, None, :]
-            pi, sigma, mu, _ = mdn_rnn(z_vectors, actions)
+                target = observations["next_z"]
+                loss = loss_function(pi, sigma, mu, target)
+                loss.backward()
+                optimizer.step()
 
-            target = observations["next_z"]
-            loss = loss_function(pi, sigma, mu, target)
-            loss.backward()
-            optimizer.step()
+                cumulative_loss += loss.data
 
-            cumulative_loss += loss.data
+            if create_progress_samples:
+                progress_samples(self.game, dataset, mdn_rnn, epoch)
 
-        if create_progress_samples:
-            progress_samples(game, dataset, mdn_rnn, epoch)
+            logger.info("{:04}: {:.3f}".format(epoch, cumulative_loss / len(dataloader)))
 
-        logger.info("{:04}: {:.3f}".format(epoch, cumulative_loss / len(dataloader)))
-
-    mdn_rnn.save_state(game)
+        mdn_rnn.save_state(self.game)
 
 
 class MDN_RNN(StateSavingMixin, nn.Module):
-    def __init__(self):
+    def __init__(self, models_dir=MODELS_DIR):
+        self.models_dir = models_dir
         super().__init__()
         """ This is the M part of the World Models approach
         

@@ -1,6 +1,6 @@
-import logging
 import dataclasses
 import datetime
+import logging
 import math
 import multiprocessing
 import time
@@ -16,9 +16,8 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
-from . import OBSERVATIONS_DIR
-from .utils import spread
-
+from . import MODELS_DIR, OBSERVATIONS_DIR, SAMPLES_DIR
+from .utils import Step, spread
 
 NUMBER_OF_PLAYS: int = 1
 STEPS_PER_PLAY: int = 2000
@@ -46,8 +45,8 @@ class Observation:
 
     FILE_EXTENSION: typing.ClassVar = ".npy"
 
-    def save(self, target_directory):
-        self.disk_location = str(target_directory / (self.filename + self.FILE_EXTENSION))
+    def save(self, target_dir):
+        self.disk_location = str(target_dir / (self.filename + self.FILE_EXTENSION))
         np.save(
             self.disk_location, dataclasses.asdict(self),
         )
@@ -57,56 +56,56 @@ class Observation:
         return np.load(filename, allow_pickle=True).item()
 
 
-def gather_observations_pooled(
-    game,
-    show_screen=SHOW_SCREEN,
-    observations_directory=OBSERVATIONS_DIR,
-    number_of_plays=NUMBER_OF_PLAYS,
-    steps_per_play=STEPS_PER_PLAY,
-    action_every_steps=ACTION_EVERY_STEPS,
-    cpus_to_use=CPUS_TO_USE,
-):
-    play_split = spread(number_of_plays, cpus_to_use)
-    logger.debug("play_split: %s", play_split)
+class GatherObservationsPooled(Step):
+    def __call__(
+        self,
+        show_screen=SHOW_SCREEN,
+        number_of_plays=NUMBER_OF_PLAYS,
+        steps_per_play=STEPS_PER_PLAY,
+        action_every_steps=ACTION_EVERY_STEPS,
+        cpus_to_use=CPUS_TO_USE,
+    ):
+        play_split = spread(number_of_plays, cpus_to_use)
+        logger.debug("play_split: %s", play_split)
 
-    # Actual number of CPUs required after splitting games across CPUs
-    pool = Pool(len(play_split))
+        # Actual number of CPUs required after splitting games across CPUs
+        pool = Pool(len(play_split))
 
-    def build_args(plays):
-        return (
-            game,
-            show_screen,
-            observations_directory,
-            plays,
-            steps_per_play,
-            action_every_steps,
-        )
+        def build_args(plays):
+            return (
+                self.game,
+                show_screen,
+                self.observations_dir,
+                plays,
+                steps_per_play,
+                action_every_steps,
+            )
 
-    work = []
-    for plays in play_split:
-        args = build_args(plays)
-        logger.debug("Starting worker with %s", args)
-        work.append(pool.apply_async(gather_observations, args))
+        work = []
+        for plays in play_split:
+            args = build_args(plays)
+            logger.debug("Starting worker with %s", args)
+            work.append(pool.apply_async(gather_observations, args))
 
-    while not all(result.ready() for result in work):
-        time.sleep(0.1)
+        while not all(result.ready() for result in work):
+            time.sleep(0.1)
 
-    logger.debug("All results ready")
+        logger.debug("All results ready")
 
-    # There are not actual results to get, but this reraises exceptions
-    # in the workers
-    for result in work:
-        result.get()
+        # There are not actual results to get, but this reraises exceptions
+        # in the workers
+        for result in work:
+            result.get()
 
-    pool.close()
-    pool.join()
-    logger.debug("Gathering observations done")
+        pool.close()
+        pool.join()
+        logger.debug("Gathering observations done")
 
 
 def gather_observations(
     game,
     show_screen,
-    observations_directory,
+    observations_dir,
     number_of_plays,
     steps_per_play,
     action_every_steps,
@@ -128,8 +127,8 @@ def gather_observations(
 
     name = multiprocessing.current_process().name
     stamp = datetime.datetime.now().isoformat() + "-" + name
-    observations_directory /= game / Path(stamp)
-    observations_directory.mkdir(parents=True, exist_ok=True)
+    observations_dir /= game / Path(stamp)
+    observations_dir.mkdir(parents=True, exist_ok=True)
 
     if not show_screen:
         vdisplay = Xvfb()
@@ -167,7 +166,7 @@ def gather_observations(
 
         logger.info("Writing observations to disk")
         for observation in observations:
-            observation.save(observations_directory)
+            observation.save(observations_dir)
 
     env.close()
 
@@ -177,14 +176,14 @@ def gather_observations(
 
 def load_observations(
     game,
-    observations_directory=OBSERVATIONS_DIR,
+    observations_dir=OBSERVATIONS_DIR,
     batch_size=32,
     drop_z_values=True,
     shuffle=True,
 ):
     """ Load observations from disk and return a dataset and dataloader.
 
-    Observations are loaded from *observations_directory*.
+    Observations are loaded from *observations_dir*.
     """
 
     def load_and_transform(filename):
@@ -198,9 +197,9 @@ def load_observations(
             del obs_dict["next_z"]
         return obs_dict
 
-    observations_directory /= game
+    observations_dir /= game
     dataset = datasets.DatasetFolder(
-        root=str(observations_directory),
+        root=str(observations_dir),
         loader=load_and_transform,
         extensions=Observation.FILE_EXTENSION,
     )

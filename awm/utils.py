@@ -1,9 +1,10 @@
 import logging
+from abc import ABC, abstractmethod
 from pathlib import Path
 
 import torch
 
-from . import MODELS_DIR, DEVICE
+from . import DEVICE, MODELS_DIR, OBSERVATIONS_DIR, SAMPLES_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -22,18 +23,20 @@ def spread(n, number_of_bins):
 
 
 class StateSavingMixin:
+    """ Add load_state() and save_state() methods to a class. Expects the
+    class to have an attribute *models_dir* of type pathlib.Path.
+    """
+
     def _build_filename(self, stamp):
         if stamp is None:
             filename = "{}.torch".format(self.__class__.__name__.lower())
         else:
-            filename = "{}-{}.torch".format(
-                self.__class__.__name__.lower(), stamp
-            )
+            filename = "{}-{}.torch".format(self.__class__.__name__.lower(), stamp)
         return filename
 
     def load_state(self, game, stamp=None):
         # If there is a state file - load it
-        state_file = MODELS_DIR / Path(game) / self._build_filename(stamp)
+        state_file = self.models_dir / game / self._build_filename(stamp)
         if state_file.is_file():
             logger.info(
                 "%s: Loading state for %s with stamp %s",
@@ -47,7 +50,31 @@ class StateSavingMixin:
         logger.info(
             "%s: Saving state for %s with stamp %s", self.__class__.__name__, game, stamp
         )
-        state_dir = MODELS_DIR / Path(game)
+        state_dir = self.models_dir / game
         state_dir.mkdir(parents=True, exist_ok=True)
         state_file = state_dir / self._build_filename(stamp)
         torch.save(self.state_dict(), str(state_file))
+
+
+class Step(ABC):
+    """ A step to take to train the NN.
+
+    The step objects are exposed to the commandline via the various subcommands.
+    """
+
+    def __init__(
+        self,
+        game,
+        observations_dir=OBSERVATIONS_DIR,
+        models_dir=MODELS_DIR,
+        samples_dir=SAMPLES_DIR,
+    ):
+        self.game = game
+        self.observations_dir = observations_dir
+        self.models_dir = models_dir
+        self.samples_dir = samples_dir
+        super().__init__()
+
+    @abstractmethod
+    def __call__(self, *args, **kwargs):
+        pass

@@ -2,6 +2,7 @@
 
 ## General
 
+* Add a command that does the whole training
 * Add progressbar to training loops (maybe tqdm)
 * Make z_size available on VAE
 * Use defaults that are sensible

@@ -3,12 +3,22 @@ import logging
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
-from . import SUPPORTED_GAMES, VERSION, controller, mdn_rnn, observations, vae, OBSERVATIONS_DIR
-from .controller import train_controller
-from .mdn_rnn import train_mdn_rnn
-from .observations import gather_observations_pooled
-from .play import play_game
-from .vae import precompute_z_values, train_vae
+from . import (
+    MODELS_DIR,
+    OBSERVATIONS_DIR,
+    SAMPLES_DIR,
+    SUPPORTED_GAMES,
+    VERSION,
+    controller,
+    mdn_rnn,
+    observations,
+    vae,
+)
+from .controller import TrainController
+from .mdn_rnn import TrainMDNRNN
+from .observations import GatherObservationsPooled
+from .play import PlayGame
+from .vae import PrecomputeZValues, TrainVAE
 
 
 def parse():
@@ -25,6 +35,24 @@ Atari games.
     )
     parser.add_argument(
         "-v", help="Be more verbose", dest="verbose", action="store_true", default=False
+    )
+    parser.add_argument(
+        "--observations-dir",
+        type=Path,
+        default=OBSERVATIONS_DIR,
+        help="Directory for storing/loading the observations (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--models-dir",
+        type=Path,
+        default=MODELS_DIR,
+        help="Directory for storing/loading the models (default: %(default)s)",
+    )
+    parser.add_argument(
+        "--samples-dir",
+        type=Path,
+        default=SAMPLES_DIR,
+        help="Directory for storing the progress samples (default: %(default)s)",
     )
     parser.add_argument("game", help="Name of game", choices=SUPPORTED_GAMES)
     subparsers = parser.add_subparsers(
@@ -50,12 +78,6 @@ Atari games.
         help="CPUs to use in gathering observations (default: %(default)s)",
     )
     observations_parser.add_argument(
-        "--observations-directory",
-        type=Path,
-        default=OBSERVATIONS_DIR,
-        help="Path where the observations should be saved (default: %(default)s)",
-    )
-    observations_parser.add_argument(
         "--number-of-plays",
         type=int,
         default=observations.NUMBER_OF_PLAYS,
@@ -74,15 +96,10 @@ Atari games.
         metavar="N",
         help="Take an action every N steps (default: %(default)s)",
     )
-    observations_parser.set_defaults(func=gather_observations_pooled)
+    observations_parser.set_defaults(klass=GatherObservationsPooled)
 
     train_vae_parser = subparsers.add_parser(
         "train-vae", help="Train the VAE", description="Train the VAE"
-    )
-    train_vae_parser.add_argument(
-        "--observations-directory",
-        default=OBSERVATIONS_DIR,
-        help="Path to load the observations from (default: %(default)s)",
     )
     train_vae_parser.add_argument(
         "--number-of-epochs",
@@ -97,10 +114,10 @@ Atari games.
         dest="create_progress_samples",
         help="Don't create sample pictures to visualize the learning progress (default: %(default)s)",
     )
-    train_vae_parser.set_defaults(func=train_vae)
+    train_vae_parser.set_defaults(klass=TrainVAE)
 
     precompute_z_values_parser = subparsers.add_parser("precompute-z-values",)
-    precompute_z_values_parser.set_defaults(func=precompute_z_values)
+    precompute_z_values_parser.set_defaults(klass=PrecomputeZValues)
 
     train_mdn_rnn_parser = subparsers.add_parser(
         "train-mdn-rnn", help="Train the MDN-RNN", description="Train the MDN-RNN"
@@ -118,7 +135,7 @@ Atari games.
         default=mdn_rnn.NUMBER_OF_EPOCHS,
         help="Number of epochs to train the MDN_RNN (default: %(default)s)",
     )
-    train_mdn_rnn_parser.set_defaults(func=train_mdn_rnn)
+    train_mdn_rnn_parser.set_defaults(klass=TrainMDNRNN)
 
     train_controller_parser = subparsers.add_parser(
         "train-controller",
@@ -132,12 +149,18 @@ Atari games.
         help="Threshold for the reward to stop training (default: %(default)s)",
     )
     train_controller_parser.add_argument(
+        "--step-limit",
+        type=int,
+        default=controller.STEP_LIMIT,
+        help="Limit for the game steps to play - 0 means no limit (default: %(default)s)",
+    )
+    train_controller_parser.add_argument(
         "--show-screen",
         action="store_true",
         default=controller.SHOW_SCREEN,
         help="Show the gym screen when training (default: %(default)s)",
     )
-    train_controller_parser.set_defaults(func=train_controller)
+    train_controller_parser.set_defaults(klass=TrainController)
 
     play_game_parser = subparsers.add_parser(
         "play-game",
@@ -145,20 +168,25 @@ Atari games.
         description="Play the game using the World Model",
     )
     play_game_parser.add_argument("--stamp", type=int, default=None)
-    play_game_parser.set_defaults(func=play_game)
+    play_game_parser.set_defaults(klass=PlayGame)
 
     args = vars(parser.parse_args())
 
     # Remove keys not mapping directly to a kwarg
-    func = args.pop("func")
+    klass = args.pop("klass")
     game = args.pop("game")
     verbose = args.pop("verbose")
+    observations_dir = args.pop("observations_dir")
+    models_dir = args.pop("models_dir")
+    samples_dir = args.pop("samples_dir")
+
     if verbose:
         root_logger = logging.getLogger()
         root_logger.setLevel(logging.DEBUG)
     del args["subcommand"]
 
-    func(game, **args)
+    obj = klass(game, observations_dir, models_dir, samples_dir)
+    obj(**args)
 
 
 parse()
