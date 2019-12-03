@@ -91,10 +91,11 @@ Atari games.
         help="Number of epochs to train the VAE (default: %(default)s)",
     )
     train_vae_parser.add_argument(
-        "--create-progress-samples",
+        "--dont-create-progress-samples",
         action="store_false",
         default=vae.CREATE_PROGRESS_SAMPLES,
-        help="Create sample pictures to visualize the learning progress (default: %(default)s)",
+        dest="create_progress_samples",
+        help="Don't create sample pictures to visualize the learning progress (default: %(default)s)",
     )
     train_vae_parser.set_defaults(func=train_vae)
 
@@ -105,10 +106,11 @@ Atari games.
         "train-mdn-rnn", help="Train the MDN-RNN", description="Train the MDN-RNN"
     )
     train_mdn_rnn_parser.add_argument(
-        "--create-progress-samples",
+        "--dont-create-progress-samples",
         action="store_false",
         default=mdn_rnn.CREATE_PROGRESS_SAMPLES,
-        help="Create sample pictures to visualize the learning progress (default: %(default)s)",
+        dest="create_progress_samples",
+        help="Don't create sample pictures to visualize the learning progress (default: %(default)s)",
     )
     train_mdn_rnn_parser.add_argument(
         "--number-of-epochs",
