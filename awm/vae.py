@@ -169,7 +169,7 @@ class VAE(StateSavingMixin, nn.Module):
 
 def loss_fn(reconstruction, original, mu, logvar):
     # This is the L2 loss, described in the World Models paper
-    BCE = F.mse_loss(reconstruction, original, size_average=False)
+    BCE = F.mse_loss(reconstruction, original, reduction="sum")
 
     # This is based heavily on the vae example from torch
     KLD = -0.5 * torch.sum(1 + 2 * logvar - mu.pow(2) - (2 * logvar).exp())
