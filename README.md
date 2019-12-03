@@ -44,6 +44,7 @@ included games.
 - Python 3.6.9
 - [pytorch 1.2](https://pytorch.org/)
 - gym 0.15.3
+- cma 2.7.0
 
 ## Approach description
 
@@ -192,7 +193,7 @@ make ARGS="-v CarRacing-0 gather-observations --help"
 1. "Revisiting the Arcade Learning Environment" https://arxiv.org/abs/1709.06009
 1. "OpenAI Gym" https://arxiv.org/abs/1606.01540
 
-# Helpful tutorials
+# Helpful tutorials / code samples
 
 ## VAE
 
@@ -201,4 +202,9 @@ make ARGS="-v CarRacing-0 gather-observations --help"
 
 ## RNN
 
-1.  https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+1. https://colah.github.io/posts/2015-08-Understanding-LSTMs/
+
+## MDN
+
+1. https://mikedusenberry.com/mixture-density-networks
+1. https://github.com/sagelywizard/pytorch-mdn
