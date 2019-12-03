@@ -174,6 +174,12 @@ def gather_observations(
         vdisplay.stop()
 
 
+# Basic transformation applied to the captured screen
+transform = transforms.Compose(
+    [transforms.ToPILImage(), transforms.Resize((64, 64)), transforms.ToTensor()]
+)
+
+
 def load_observations(
     game,
     observations_dir=OBSERVATIONS_DIR,
@@ -188,9 +194,6 @@ def load_observations(
 
     def load_and_transform(filename):
         obs_dict = Observation.load_as_dict(filename)
-        transform = transforms.Compose(
-            [transforms.ToPILImage(), transforms.Resize((64, 64)), transforms.ToTensor(),]
-        )
         obs_dict["screen"] = transform(obs_dict["screen"])
         if drop_z_values:
             del obs_dict["z"]

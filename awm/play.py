@@ -11,6 +11,7 @@ from .controller import STEP_LIMIT, Controller
 from .mdn_rnn import MDN_RNN
 from .utils import Step
 from .vae import VAE
+from .observations import transform
 
 logger = logging.getLogger(__name__)
 
@@ -21,12 +22,6 @@ class PlayGame(Step):
     ):
         logger.info("Playing game %s", self.game)
 
-        tpi = transforms.ToPILImage()
-        r = transforms.Resize((64, 64))
-        tt = transforms.ToTensor()
-
-        def t(screen):
-            return tt(r(tpi(screen)))
 
         with torch.no_grad():
             controller = Controller(models_dir)
@@ -46,7 +41,7 @@ class PlayGame(Step):
             action = torch.zeros(3)
 
             screen = env.reset()
-            screen = t(screen)
+            screen = transform(screen)
             screen.unsqueeze_(0)
 
             z, _, _ = vae.encoder(screen)
@@ -65,7 +60,7 @@ class PlayGame(Step):
 
                 screen, reward, done, _ = env.step(action.detach().numpy())
                 overall_reward += reward
-                screen = t(screen)
+                screen = transform(screen)
                 screen.unsqueeze_(0)
 
                 z, _, _ = vae.encoder(screen)
