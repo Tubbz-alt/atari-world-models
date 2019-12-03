@@ -1,5 +1,6 @@
 import os
 import random
+import logging
 import time
 from itertools import zip_longest
 from pathlib import Path
@@ -14,13 +15,14 @@ from torch import nn
 from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
-from . import logger
 from .observations import OBSERVATION_DIRECTORY, load_observations
 from .utils import StateSavingMixin
 
 NUMBER_OF_EPOCHS = 10
 CREATE_PROGRESS_SAMPLES = True
 SAMPLE_DIR = Path("samples")
+
+logger = logging.getLogger(__name__)
 
 
 def progress_samples(vae, dataset, game, epoch_number, sample_dir=SAMPLE_DIR):

@@ -1,3 +1,4 @@
+import logging
 import random
 from pathlib import Path
 
@@ -7,13 +8,15 @@ from torch import nn
 from torch.distributions import Normal
 from torchvision.utils import save_image
 
-from . import SAMPLES_PATH, logger
+from . import SAMPLES_PATH
 from .observations import OBSERVATION_DIRECTORY, load_observations
 from .utils import StateSavingMixin
 from .vae import VAE
 
 CREATE_PROGRESS_SAMPLES = True
 NUMBER_OF_EPOCHS = 10
+
+logger = logging.getLogger(__name__)
 
 
 def progress_samples(game, dataset, mdn_rnn, epoch):

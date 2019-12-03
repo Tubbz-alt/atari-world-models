@@ -1,3 +1,4 @@
+import logging
 import dataclasses
 import datetime
 import math
@@ -15,7 +16,6 @@ from torch.utils.data import DataLoader
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
-from . import logger
 from .utils import spread
 
 OBSERVATION_DIRECTORY: Path = Path("data")
@@ -24,6 +24,8 @@ STEPS_PER_PLAY: int = 2000
 ACTION_EVERY_STEPS: int = 20
 SHOW_SCREEN: bool = False
 CPUS_TO_USE: int = multiprocessing.cpu_count()
+
+logger = logging.getLogger(__name__)
 
 
 @dataclass

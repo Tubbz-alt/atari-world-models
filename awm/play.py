@@ -1,13 +1,15 @@
+import logging
 import gym
 import torch
 from torchvision import transforms
 from torchvision.utils import save_image
 from xvfbwrapper import Xvfb
 
-from . import logger
 from .controller import Controller
 from .mdn_rnn import MDN_RNN
 from .vae import VAE
+
+logger = logging.getLogger(__name__)
 
 
 def play_game(game, solution=None, stamp=None):

@@ -1,8 +1,9 @@
+import logging
 from pathlib import Path
 
 import torch
 
-from . import logger
+logger = logging.getLogger(__name__)
 
 
 def spread(n, number_of_bins):

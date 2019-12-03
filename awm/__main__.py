@@ -3,7 +3,7 @@ import logging
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
-from . import SUPPORTED_GAMES, VERSION, controller, logger, mdn_rnn, observations, vae
+from . import SUPPORTED_GAMES, VERSION, controller, mdn_rnn, observations, vae
 from .controller import train_controller
 from .mdn_rnn import train_mdn_rnn
 from .observations import gather_observations_pooled
@@ -152,7 +152,8 @@ Atari games.
     game = args.pop("game")
     verbose = args.pop("verbose")
     if verbose:
-        logger.setLevel(logging.DEBUG)
+        root_logger = logging.getLogger()
+        root_logger.setLevel(logging.DEBUG)
     del args["subcommand"]
 
     func(game, **args)

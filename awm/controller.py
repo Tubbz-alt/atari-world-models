@@ -1,3 +1,4 @@
+import logging
 import multiprocessing
 from multiprocessing import Event, Process, Queue
 
@@ -7,12 +8,13 @@ import torch
 from torch import nn
 from xvfbwrapper import Xvfb
 
-from . import logger
 from .mdn_rnn import MDN_RNN
 from .utils import StateSavingMixin
 
 REWARD_THRESHOLD = 600
 SHOW_SCREEN = False
+
+logger = logging.getLogger(__name__)
 
 
 def worker(game, solution_q, reward_q, stop, show_screen):
