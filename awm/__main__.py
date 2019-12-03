@@ -3,9 +3,11 @@ import logging
 from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
-from . import SUPPORTED_GAMES, VERSION, logger, observations, vae
+from . import SUPPORTED_GAMES, VERSION, controller, logger, mdn_rnn, observations, vae
+from .controller import train_controller
 from .mdn_rnn import train_mdn_rnn
 from .observations import gather_observations_pooled
+from .play import play_game
 from .vae import precompute_z_values, train_vae
 
 
@@ -102,7 +104,46 @@ Atari games.
     train_mdn_rnn_parser = subparsers.add_parser(
         "train-mdn-rnn", help="Train the MDN-RNN", description="Train the MDN-RNN"
     )
+    train_mdn_rnn_parser.add_argument(
+        "--create-progress-samples",
+        action="store_false",
+        default=mdn_rnn.CREATE_PROGRESS_SAMPLES,
+        help="Create sample pictures to visualize the learning progress (default: %(default)s)",
+    )
+    train_mdn_rnn_parser.add_argument(
+        "--number-of-epochs",
+        type=int,
+        default=mdn_rnn.NUMBER_OF_EPOCHS,
+        help="Number of epochs to train the MDN_RNN (default: %(default)s)",
+    )
     train_mdn_rnn_parser.set_defaults(func=train_mdn_rnn)
+
+    train_controller_parser = subparsers.add_parser(
+        "train-controller",
+        help="Train the Controller",
+        description="Train the Controller",
+    )
+    train_controller_parser.add_argument(
+        "--reward-threshold",
+        type=int,
+        default=controller.REWARD_THRESHOLD,
+        help="Threshold for the reward to stop training (default: %(default)s)",
+    )
+    train_controller_parser.add_argument(
+        "--show-screen",
+        action="store_true",
+        default=controller.SHOW_SCREEN,
+        help="Show the gym screen when training (default: %(default)s)",
+    )
+    train_controller_parser.set_defaults(func=train_controller)
+
+    play_game_parser = subparsers.add_parser(
+        "play-game",
+        help="Play the game using the World Model",
+        description="Play the game using the World Model",
+    )
+    play_game_parser.add_argument("--stamp", type=int, default=None)
+    play_game_parser.set_defaults(func=play_game)
 
     args = vars(parser.parse_args())
 

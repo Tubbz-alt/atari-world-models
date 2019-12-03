@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import torch
 
@@ -18,6 +19,8 @@ logging_handler.setFormatter(formatter)
 
 del logging_handler
 del formatter
+
+SAMPLES_PATH = Path("samples")
 
 # Make torch behaviour more reproducible
 # torch.manual_seed(0)
