@@ -11,6 +11,7 @@ from xvfbwrapper import Xvfb
 
 from . import MODELS_DIR
 from .mdn_rnn import MDN_RNN
+from .vae import VAE
 from .utils import StateSavingMixin, Step
 
 REWARD_THRESHOLD = 600
@@ -138,10 +139,7 @@ class TrainController(Step):
                 return result
 
             # Our function we want to fit is the game we are playing
-            logger.info("**************************")
             logger.info("rewards: %s", rewards)
-            print("rewards: %s", rewards)
-            logger.info("**************************")
             es.tell(sorted_values(solutions), sorted_values(rewards))
             es.disp()
 
@@ -175,10 +173,9 @@ class Controller(StateSavingMixin, nn.Module):
         super().__init__()
         self.models_dir = models_dir
         action_size = 3
-        z_size = 32
         hidden_size = 256
 
-        self.f = nn.Sequential(nn.Linear(z_size + hidden_size, action_size), nn.Tanh(),)
+        self.f = nn.Sequential(nn.Linear(VAE.z_size + hidden_size, action_size), nn.Tanh(),)
 
     def load_solution(self, solution):
         """ Load a solution vector obtained from ES-CMA into the parameters

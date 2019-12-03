@@ -52,8 +52,7 @@ def progress_samples(vae, dataset, game, epoch_number, samples_dir):
 
     # Create a 64 random z vectors and decode them to images
     with torch.no_grad():
-        z_size = 32
-        rands = torch.randn(64, z_size)
+        rands = torch.randn(64, VAE.z_size)
         result = vae.decoder(rands)
         save_image(result, filename_rand)
 
@@ -95,6 +94,9 @@ class TrainVAE(Step):
 
 
 class VAE(StateSavingMixin, nn.Module):
+    # The size of the latent vector (the size of the bottleneck)
+    z_size = 32
+
     def __init__(self, models_dir=MODELS_DIR):
         super().__init__()
         self.models_dir = models_dir
@@ -114,13 +116,11 @@ class VAE(StateSavingMixin, nn.Module):
             # -> 256 x 2 x 2
         )
 
-        # bottleneck-size
         flattened_size = 1024
-        bottleneck_size = 32
 
-        self.bottle_mu = nn.Linear(flattened_size, bottleneck_size)
-        self.bottle_logvar = nn.Linear(flattened_size, bottleneck_size)
-        self.unbottle = nn.Linear(bottleneck_size, flattened_size)
+        self.bottle_mu = nn.Linear(flattened_size, self.z_size)
+        self.bottle_logvar = nn.Linear(flattened_size, self.z_size)
+        self.unbottle = nn.Linear(self.z_size, flattened_size)
 
         self.decode = nn.Sequential(
             # 1024
@@ -197,7 +197,7 @@ class PrecomputeZValues(Step):
 
         # combine z and the next z value
         results = zip_longest(
-            results, results[1:], fillvalue=(torch.zeros(32), "invalid-path")
+            results, results[1:], fillvalue=(torch.zeros(VAE.z_size), "invalid-path")
         )
 
         for ((z, disk_location), (next_z, next_disk_location)) in results:

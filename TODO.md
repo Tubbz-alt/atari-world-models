@@ -2,7 +2,7 @@
 
 ## General
 
-* Make z_size available on VAE
+* Make actions_size, ... available as (global) constants
 * Use defaults that are sensible
 * Collect all hyperparameters and put them in one place
 

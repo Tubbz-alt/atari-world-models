@@ -48,7 +48,7 @@ def progress_samples(game, dataset, mdn_rnn, epoch):
                 # Do 16 prediction steps into the future
                 pi, sigma, mu, _ = mdn_rnn(z, action)
                 sampled = torch.sum(pi * torch.normal(mu, sigma), dim=2)
-                sampled = sampled.view(1, 32)
+                sampled = sampled.view(1, VAE.z_size)
 
                 z = sampled
 
@@ -73,9 +73,8 @@ def loss_function(pi, sigma, mu, target):
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.120.5685&rep=rep1&type=pdf
     """
     sequence = 1
-    z_size = 32
 
-    target = target.view(-1, sequence, 1, z_size)
+    target = target.view(-1, sequence, 1, VAE.z_size)
 
     normal_distributions = Normal(mu, sigma)
     # log_prob(y) ... log of pdf at value y
@@ -152,13 +151,12 @@ class MDN_RNN(StateSavingMixin, nn.Module):
         self.temperature = 1.30
 
         # input needs dimensions sequence length, batch_size, size of data
-        self.z_size = 32
         action_size = 3
 
-        self.lstm = nn.LSTM(self.z_size + action_size, self.hidden_units)
-        self.mu = nn.Linear(self.hidden_units, self.gaussian_mixtures * self.z_size)
-        self.sigma = nn.Linear(self.hidden_units, self.gaussian_mixtures * self.z_size)
-        self.pi = nn.Linear(self.hidden_units, self.gaussian_mixtures * self.z_size)
+        self.lstm = nn.LSTM(VAE.z_size + action_size, self.hidden_units)
+        self.mu = nn.Linear(self.hidden_units, self.gaussian_mixtures * VAE.z_size)
+        self.sigma = nn.Linear(self.hidden_units, self.gaussian_mixtures * VAE.z_size)
+        self.pi = nn.Linear(self.hidden_units, self.gaussian_mixtures * VAE.z_size)
 
         self.hidden_state = self.set_hidden_state()
 
@@ -176,7 +174,7 @@ class MDN_RNN(StateSavingMixin, nn.Module):
 
         # Arguments to reshape the output of the linear transformations into the
         # number of gaussian mixtures
-        view_args = (-1, sequence, self.gaussian_mixtures, self.z_size)
+        view_args = (-1, sequence, self.gaussian_mixtures, VAE.z_size)
 
         # Based on
         #   https://mikedusenberry.com/mixture-density-networks
