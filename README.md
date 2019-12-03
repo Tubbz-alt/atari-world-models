@@ -2,6 +2,8 @@
 
 [![Build Status](https://travis-ci.com/chsigi/atari-world-models.svg?branch=master)](https://travis-ci.com/chsigi/atari-world-models)
 
+![VAE Output](/images/carracing-vae.png?raw=true "VAE Output")
+
 **Type:** Bring your own method (and a somewhat different dataset)
 
 **Topic:** Deep Reinforcement Learning
@@ -142,6 +144,35 @@ is able to achieve an average score of 800 per 10 runs.
 ## Actual
 
 TODO
+
+# Usage
+
+The whole system is contained in a Docker container - you can either directly interact with the container
+via docker-compose or use the provided Makefile targets. Most Makefile targets use sane defaults - if you need
+to fine-tune, then you can use the *deep* target to access the various subcommands and pass arguments.
+
+## Full training
+
+```
+make observations GAME=CarRacing-v0
+make vae GAME=CarRacing-v0
+make mdnrnn GAME=CarRacing-v0
+make controller GAME=CarRacing-v0
+```
+
+## Watching the system in action
+
+```
+make play GAME=CarRacing-v0
+```
+
+## Custom interaction
+
+```
+make ARGS="--help"
+make ARGS="-v CarRacing-0 gather-observations --help"
+...
+```
 
 # Papers
 

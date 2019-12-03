@@ -2,12 +2,12 @@
 
 ## General
 
-* Add a command that does the whole training
-* Add progressbar to training loops (maybe tqdm)
 * Make z_size available on VAE
 * Use defaults that are sensible
-* Generate more observations
 * Collect all hyperparameters and put them in one place
+
+* Add progressbar to training loops (maybe tqdm)
+* Generate nice gifs showing various stages of training
 
 ## VAE
 
