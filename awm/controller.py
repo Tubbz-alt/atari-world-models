@@ -1,7 +1,9 @@
 import logging
 import multiprocessing
 import queue
+from functools import partial
 from multiprocessing import Event, Process, Queue
+from pathlib import Path
 
 import cma
 import numpy as np
@@ -10,6 +12,7 @@ from torch import nn
 from xvfbwrapper import Xvfb
 
 from . import MODELS_DIR
+from .games import GymGame
 from .mdn_rnn import MDN_RNN
 from .utils import StateSavingMixin, Step
 from .vae import VAE
@@ -19,10 +22,7 @@ SHOW_SCREEN = False
 logger = logging.getLogger(__name__)
 
 
-def worker(game, solution_q, reward_q, stop, show_screen, models_dir, step_limit):
-    from .play import PlayGame
-
-    play_game = PlayGame(game)
+def worker(game, play_game, solution_q, reward_q, stop, show_screen):
 
     if not show_screen:
         vdisplay = Xvfb()
@@ -36,7 +36,7 @@ def worker(game, solution_q, reward_q, stop, show_screen, models_dir, step_limit
         else:
             name = multiprocessing.current_process().name
             logger.info("%s started working on %s", name, solution_id)
-            reward = play_game(step_limit, solution=solution, models_dir=models_dir)
+            reward = play_game(solution=solution)
             reward_q.put((solution_id, reward))
 
     if not show_screen:
@@ -72,8 +72,18 @@ class TrainController(Step):
     ):
         logger.info("Training the controller for game %s", self.game)
 
-        controller = Controller(models_dir=self.models_dir)
-        controller.load_state(self.game, stamp=53)
+        controller = Controller(self.game, self.models_dir)
+        controller.load_state(stamp=53)
+
+        from .play import PlayGame
+
+        play_game = PlayGame(
+            self.game,
+            models_dir=self.models_dir,
+            observations_dir=self.observations_dir,
+            samples_dir=self.samples_dir,
+        )
+        play_game = partial(play_game, step_limit)
 
         # action:
         # 0: steering -1 -> 1
@@ -97,15 +107,7 @@ class TrainController(Step):
         for _ in range(multiprocessing.cpu_count()):
             Process(
                 target=worker,
-                args=(
-                    self.game,
-                    solution_q,
-                    reward_q,
-                    stop,
-                    show_screen,
-                    self.models_dir,
-                    step_limit,
-                ),
+                args=(self.game, play_game, solution_q, reward_q, stop, show_screen,),
             ).start()
 
         highest_reward = None
@@ -152,9 +154,9 @@ class TrainController(Step):
 
                     # Load solution into controller and then save controller state
                     # to disk
-                    controller = Controller(models_dir=self.models_dir)
+                    controller = Controller(self.game, self.models_dir)
                     controller.load_solution(solution)
-                    controller.save_state(self.game, stamp=str(epoch))
+                    controller.save_state(stamp=str(epoch))
 
                 if highest_reward and highest_reward <= reward_threshold:
                     break
@@ -166,14 +168,15 @@ class TrainController(Step):
 
 
 class Controller(StateSavingMixin, nn.Module):
-    def __init__(self, models_dir=MODELS_DIR):
+    def __init__(self, game: GymGame, models_dir: Path):
         super().__init__()
+        self.game = game
         self.models_dir = models_dir
-        action_size = 3
+
         hidden_size = 256
 
         self.f = nn.Sequential(
-            nn.Linear(VAE.z_size + hidden_size, action_size), nn.Tanh(),
+            nn.Linear(VAE.z_size + hidden_size, self.game.action_vector_size), nn.Tanh(),
         )
 
     def load_solution(self, solution):
@@ -183,8 +186,9 @@ class Controller(StateSavingMixin, nn.Module):
         """
         weights = next(self.parameters())
 
-        action_vector_size = 3
-        weights_from_solution = torch.tensor(solution).view(action_vector_size, -1)
+        weights_from_solution = torch.tensor(solution).view(
+            self.game.action_vector_size, -1
+        )
 
         for actual, given in zip(weights, weights_from_solution):
             actual.data.copy_(given)

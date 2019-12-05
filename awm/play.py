@@ -1,4 +1,5 @@
 import logging
+from pathlib import Path
 
 import gym
 import torch
@@ -19,25 +20,25 @@ logger = logging.getLogger(__name__)
 class PlayGame(Step):
     hyperparams_key = "play_game"
 
-    def __call__(self, step_limit, solution=None, stamp=None, models_dir=MODELS_DIR):
+    def __call__(self, step_limit, solution=None, stamp=None):
         logger.info("Playing game %s", self.game)
 
         with torch.no_grad():
-            controller = Controller(models_dir)
+            controller = Controller(self.game, self.models_dir)
             if solution is not None:
                 controller.load_solution(solution)
             else:
-                controller.load_state(self.game, stamp)
+                controller.load_state(stamp)
 
-            vae = VAE(models_dir)
-            vae.load_state(self.game)
+            vae = VAE(self.game, self.models_dir)
+            vae.load_state()
 
-            mdn_rnn = MDN_RNN(models_dir)
-            mdn_rnn.load_state(self.game)
+            mdn_rnn = MDN_RNN(self.game, self.models_dir)
+            mdn_rnn.load_state()
 
             env = gym.make(self.game.key)
 
-            action = torch.zeros(3)
+            action = torch.zeros(self.game.action_vector_size)
 
             screen = env.reset()
             screen = transform(screen)

@@ -25,7 +25,8 @@ def spread(n, number_of_bins):
 
 class StateSavingMixin:
     """ Add load_state() and save_state() methods to a class. Expects the
-    class to have an attribute *models_dir* of type pathlib.Path.
+    class to have an attribute *models_dir* of type pathlib.Path and *game* of
+    type GymGame.
     """
 
     def _build_filename(self, stamp):
@@ -35,23 +36,26 @@ class StateSavingMixin:
             filename = "{}-{}.torch".format(self.__class__.__name__.lower(), stamp)
         return filename
 
-    def load_state(self, game, stamp=None):
+    def load_state(self, stamp=None):
         # If there is a state file - load it
-        state_file = self.models_dir / game.key / self._build_filename(stamp)
+        state_file = self.models_dir / self.game.key / self._build_filename(stamp)
         if state_file.is_file():
             logger.info(
                 "%s: Loading state for %s with stamp %s",
                 self.__class__.__name__,
-                game,
+                self.game,
                 stamp,
             )
             self.load_state_dict(torch.load(str(state_file), map_location=DEVICE))
 
-    def save_state(self, game, stamp=None):
+    def save_state(self, stamp=None):
         logger.info(
-            "%s: Saving state for %s with stamp %s", self.__class__.__name__, game, stamp
+            "%s: Saving state for %s with stamp %s",
+            self.__class__.__name__,
+            self.game,
+            stamp,
         )
-        state_dir = self.models_dir / game.key
+        state_dir = self.models_dir / self.game.key
         state_dir.mkdir(parents=True, exist_ok=True)
         state_file = state_dir / self._build_filename(stamp)
         torch.save(self.state_dict(), str(state_file))

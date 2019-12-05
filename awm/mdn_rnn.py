@@ -9,6 +9,7 @@ from torch.distributions import Normal
 from torchvision.utils import save_image
 
 from . import DEVICE, MODELS_DIR, OBSERVATIONS_DIR, SAMPLES_DIR
+from .games import GymGame
 from .observations import load_observations
 from .utils import StateSavingMixin, Step
 from .vae import VAE
@@ -27,8 +28,9 @@ def progress_samples(game, dataset, mdn_rnn, epoch):
 
     logger.info("Writing MDN_RNN progress samples for game %s", game)
     with torch.no_grad():
-        vae = VAE().to(DEVICE)
-        vae.load_state(game)
+        # Use same root directory for the models as MDNRNN
+        vae = VAE(game, mdn_rnn.models_dir).to(DEVICE)
+        vae.load_state()
 
         images = None
 
@@ -93,8 +95,8 @@ class TrainMDNRNN(Step):
             self.game, self.observations_dir, drop_z_values=False
         )
 
-        mdn_rnn = MDN_RNN(self.models_dir).to(DEVICE)
-        mdn_rnn.load_state(self.game)
+        mdn_rnn = MDN_RNN(self.game, self.models_dir).to(DEVICE)
+        mdn_rnn.load_state()
 
         optimizer = torch.optim.Adam(mdn_rnn.parameters(), lr=1e-3)
 
@@ -126,11 +128,12 @@ class TrainMDNRNN(Step):
 
             logger.info("{:04}: {:.3f}".format(epoch, cumulative_loss / len(dataloader)))
 
-        mdn_rnn.save_state(self.game)
+        mdn_rnn.save_state()
 
 
 class MDN_RNN(StateSavingMixin, nn.Module):
-    def __init__(self, models_dir=MODELS_DIR):
+    def __init__(self, game: GymGame, models_dir: Path):
+        self.game = game
         self.models_dir = models_dir
         super().__init__()
         """ This is the M part of the World Models approach
@@ -149,10 +152,7 @@ class MDN_RNN(StateSavingMixin, nn.Module):
         self.gaussian_mixtures = 5
         self.temperature = 1.30
 
-        # input needs dimensions sequence length, batch_size, size of data
-        action_size = 3
-
-        self.lstm = nn.LSTM(VAE.z_size + action_size, self.hidden_units)
+        self.lstm = nn.LSTM(VAE.z_size + self.game.action_vector_size, self.hidden_units)
         self.mu = nn.Linear(self.hidden_units, self.gaussian_mixtures * VAE.z_size)
         self.sigma = nn.Linear(self.hidden_units, self.gaussian_mixtures * VAE.z_size)
         self.pi = nn.Linear(self.hidden_units, self.gaussian_mixtures * VAE.z_size)

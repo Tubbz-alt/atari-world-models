@@ -16,6 +16,7 @@ from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
 from . import DEVICE, MODELS_DIR
+from .games import GymGame
 from .observations import load_observations
 from .utils import StateSavingMixin, Step
 
@@ -69,10 +70,10 @@ class TrainVAE(Step):
         """
         dataloader, dataset = load_observations(self.game, self.observations_dir)
         bs = 32
-        vae = VAE(self.models_dir).to(DEVICE)
+        vae = VAE(self.game, self.models_dir).to(DEVICE)
         optimizer = torch.optim.Adam(vae.parameters())
 
-        vae.load_state(self.game)
+        vae.load_state()
 
         for epoch in range(number_of_epochs):
             cumulative_loss = 0.0
@@ -89,15 +90,16 @@ class TrainVAE(Step):
             if create_progress_samples:
                 progress_samples(vae, dataset, self.game, epoch, self.samples_dir)
 
-        vae.save_state(self.game)
+        vae.save_state()
 
 
 class VAE(StateSavingMixin, nn.Module):
     # The size of the latent vector (the size of the bottleneck)
     z_size = 32
 
-    def __init__(self, models_dir=MODELS_DIR):
+    def __init__(self, game: GymGame, models_dir: Path):
         super().__init__()
+        self.game = game
         self.models_dir = models_dir
         # See World Models paper - Appendix A.1 Variational Autoencoder
         self.encode = nn.Sequential(
@@ -182,8 +184,8 @@ class PrecomputeZValues(Step):
         )
         with torch.no_grad():
 
-            vae = VAE(self.models_dir).to(DEVICE)
-            vae.load_state(self.game)
+            vae = VAE(self.game, self.models_dir).to(DEVICE)
+            vae.load_state()
 
             # Will be filled with (z, disk_location) tuples
             results = []
