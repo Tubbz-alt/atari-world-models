@@ -2,9 +2,7 @@
 
 ## General
 
-* Make actions_size, ... available as (global) constants
-* Use defaults that are sensible
-
+* Find hyperparameters for CarRacing
 * Add progressbar to training loops (maybe tqdm)
 * Generate nice gifs showing various stages of training
 
