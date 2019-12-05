@@ -14,7 +14,6 @@ from .utils import StateSavingMixin, Step
 from .vae import VAE
 
 CREATE_PROGRESS_SAMPLES = True
-NUMBER_OF_EPOCHS = 10
 
 logger = logging.getLogger(__name__)
 
@@ -23,7 +22,7 @@ def progress_samples(game, dataset, mdn_rnn, epoch):
     """ Create progress samples to visualize the progress of our MDN-RNN.
     """
 
-    samples_dir = SAMPLES_DIR / Path(game)
+    samples_dir = SAMPLES_DIR / Path(game.key)
     samples_dir.mkdir(parents=True, exist_ok=True)
 
     logger.info("Writing MDN_RNN progress samples for game %s", game)
@@ -84,12 +83,12 @@ def loss_function(pi, sigma, mu, target):
 
 
 class TrainMDNRNN(Step):
+    hyperparams_key = "mdnrnn"
+
     def __call__(
-        self,
-        create_progress_samples=CREATE_PROGRESS_SAMPLES,
-        number_of_epochs=NUMBER_OF_EPOCHS,
+        self, number_of_epochs, create_progress_samples=CREATE_PROGRESS_SAMPLES,
     ):
-        logger.info("Starting to train the MDN-RNN for game %s", self.game)
+        logger.info("Starting to train the MDN-RNN for game %s", self.game.key)
         dataloader, dataset = load_observations(
             self.game, self.observations_dir, drop_z_values=False
         )

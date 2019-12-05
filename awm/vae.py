@@ -19,7 +19,6 @@ from . import DEVICE, MODELS_DIR
 from .observations import load_observations
 from .utils import StateSavingMixin, Step
 
-NUMBER_OF_EPOCHS = 10
 CREATE_PROGRESS_SAMPLES = True
 
 logger = logging.getLogger(__name__)
@@ -29,7 +28,7 @@ def progress_samples(vae, dataset, game, epoch_number, samples_dir):
     """ Generate sample pictures that help visualize the training
     progress.
     """
-    samples_dir = samples_dir / Path(game)
+    samples_dir = samples_dir / Path(game.key)
     samples_dir.mkdir(parents=True, exist_ok=True)
 
     filename_repr = samples_dir / "vae_repr_{}.png".format(epoch_number)
@@ -58,10 +57,10 @@ def progress_samples(vae, dataset, game, epoch_number, samples_dir):
 
 
 class TrainVAE(Step):
+    hyperparams_key = "vae"
+
     def __call__(
-        self,
-        number_of_epochs=NUMBER_OF_EPOCHS,
-        create_progress_samples=CREATE_PROGRESS_SAMPLES,
+        self, number_of_epochs, create_progress_samples=CREATE_PROGRESS_SAMPLES,
     ):
         """ This is the main training loop of the VAE.
 

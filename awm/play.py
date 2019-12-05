@@ -7,21 +7,20 @@ from torchvision.utils import save_image
 from xvfbwrapper import Xvfb
 
 from . import MODELS_DIR
-from .controller import STEP_LIMIT, Controller
+from .controller import Controller
 from .mdn_rnn import MDN_RNN
+from .observations import transform
 from .utils import Step
 from .vae import VAE
-from .observations import transform
 
 logger = logging.getLogger(__name__)
 
 
 class PlayGame(Step):
-    def __call__(
-        self, solution=None, stamp=None, models_dir=MODELS_DIR, step_limit=STEP_LIMIT
-    ):
-        logger.info("Playing game %s", self.game)
+    hyperparams_key = "play_game"
 
+    def __call__(self, step_limit, solution=None, stamp=None, models_dir=MODELS_DIR):
+        logger.info("Playing game %s", self.game)
 
         with torch.no_grad():
             controller = Controller(models_dir)
@@ -36,7 +35,7 @@ class PlayGame(Step):
             mdn_rnn = MDN_RNN(models_dir)
             mdn_rnn.load_state(self.game)
 
-            env = gym.make(self.game)
+            env = gym.make(self.game.key)
 
             action = torch.zeros(3)
 
@@ -73,7 +72,7 @@ class PlayGame(Step):
             env.close()
 
             logger.info(
-                "Game %s finished with reward %d", self.game, 1000 - overall_reward
+                "Game %s finished with reward %d", self.game.key, 1000 - overall_reward
             )
 
         return 1000 - overall_reward

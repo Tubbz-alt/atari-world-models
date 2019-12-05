@@ -11,12 +11,10 @@ from xvfbwrapper import Xvfb
 
 from . import MODELS_DIR
 from .mdn_rnn import MDN_RNN
-from .vae import VAE
 from .utils import StateSavingMixin, Step
+from .vae import VAE
 
-REWARD_THRESHOLD = 600
 SHOW_SCREEN = False
-STEP_LIMIT = 0
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +36,7 @@ def worker(game, solution_q, reward_q, stop, show_screen, models_dir, step_limit
         else:
             name = multiprocessing.current_process().name
             logger.info("%s started working on %s", name, solution_id)
-            reward = play_game(solution, models_dir=models_dir, step_limit=step_limit)
+            reward = play_game(step_limit, solution=solution, models_dir=models_dir)
             reward_q.put((solution_id, reward))
 
     if not show_screen:
@@ -67,11 +65,10 @@ def get_best_averaged(solution_q, reward_q, solutions, rewards):
 
 
 class TrainController(Step):
+    hyperparams_key = "controller"
+
     def __call__(
-        self,
-        reward_threshold=REWARD_THRESHOLD,
-        show_screen=SHOW_SCREEN,
-        step_limit=STEP_LIMIT,
+        self, reward_threshold, step_limit, show_screen=SHOW_SCREEN,
     ):
         logger.info("Training the controller for game %s", self.game)
 
@@ -175,7 +172,9 @@ class Controller(StateSavingMixin, nn.Module):
         action_size = 3
         hidden_size = 256
 
-        self.f = nn.Sequential(nn.Linear(VAE.z_size + hidden_size, action_size), nn.Tanh(),)
+        self.f = nn.Sequential(
+            nn.Linear(VAE.z_size + hidden_size, action_size), nn.Tanh(),
+        )
 
     def load_solution(self, solution):
         """ Load a solution vector obtained from ES-CMA into the parameters

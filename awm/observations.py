@@ -17,11 +17,9 @@ from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
 from . import MODELS_DIR, OBSERVATIONS_DIR, SAMPLES_DIR
+from .games import GymGame
 from .utils import Step, spread
 
-NUMBER_OF_PLAYS: int = 1
-STEPS_PER_PLAY: int = 2000
-ACTION_EVERY_STEPS: int = 20
 SHOW_SCREEN: bool = False
 CPUS_TO_USE: int = multiprocessing.cpu_count()
 
@@ -57,12 +55,14 @@ class Observation:
 
 
 class GatherObservationsPooled(Step):
+    hyperparams_key = "observations"
+
     def __call__(
         self,
+        number_of_plays,
+        steps_per_play,
+        action_every_steps,
         show_screen=SHOW_SCREEN,
-        number_of_plays=NUMBER_OF_PLAYS,
-        steps_per_play=STEPS_PER_PLAY,
-        action_every_steps=ACTION_EVERY_STEPS,
         cpus_to_use=CPUS_TO_USE,
     ):
         play_split = spread(number_of_plays, cpus_to_use)
@@ -103,7 +103,7 @@ class GatherObservationsPooled(Step):
 
 
 def gather_observations(
-    game,
+    game: GymGame,
     show_screen,
     observations_dir,
     number_of_plays,
@@ -127,14 +127,14 @@ def gather_observations(
 
     name = multiprocessing.current_process().name
     stamp = datetime.datetime.now().isoformat() + "-" + name
-    observations_dir /= game / Path(stamp)
+    observations_dir /= game.key / Path(stamp)
     observations_dir.mkdir(parents=True, exist_ok=True)
 
     if not show_screen:
         vdisplay = Xvfb()
         vdisplay.start()
 
-    env = gym.make(game)
+    env = gym.make(game.key)
 
     for play in range(number_of_plays):
         env.reset()
@@ -181,7 +181,7 @@ transform = transforms.Compose(
 
 
 def load_observations(
-    game,
+    game: GymGame,
     observations_dir=OBSERVATIONS_DIR,
     batch_size=32,
     drop_z_values=True,
@@ -200,7 +200,7 @@ def load_observations(
             del obs_dict["next_z"]
         return obs_dict
 
-    observations_dir /= game
+    observations_dir /= game.key
     dataset = datasets.DatasetFolder(
         root=str(observations_dir),
         loader=load_and_transform,

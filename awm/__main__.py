@@ -7,7 +7,6 @@ from . import (
     MODELS_DIR,
     OBSERVATIONS_DIR,
     SAMPLES_DIR,
-    SUPPORTED_GAMES,
     VERSION,
     controller,
     mdn_rnn,
@@ -15,9 +14,11 @@ from . import (
     vae,
 )
 from .controller import TrainController
+from .games import SUPPORTED_GAMES
 from .mdn_rnn import TrainMDNRNN
 from .observations import GatherObservationsPooled
 from .play import PlayGame
+from .utils import merge_args_with_hyperparams
 from .vae import PrecomputeZValues, TrainVAE
 
 
@@ -54,7 +55,8 @@ Atari games.
         default=SAMPLES_DIR,
         help="Directory for storing the progress samples (default: %(default)s)",
     )
-    parser.add_argument("game", help="Name of game", choices=SUPPORTED_GAMES)
+    parser.add_argument("game", help="Name of game", choices=SUPPORTED_GAMES.keys())
+
     subparsers = parser.add_subparsers(
         dest="subcommand", title="Subcommands", description="", help="",
     )
@@ -80,19 +82,19 @@ Atari games.
     observations_parser.add_argument(
         "--number-of-plays",
         type=int,
-        default=observations.NUMBER_OF_PLAYS,
+        default=None,
         help="Number of plays to play (default: %(default)s)",
     )
     observations_parser.add_argument(
         "--steps-per-play",
         type=int,
-        default=observations.STEPS_PER_PLAY,
+        default=None,
         help="Steps per play to take (default: %(default)s)",
     )
     observations_parser.add_argument(
         "--action-every-steps",
         type=int,
-        default=observations.ACTION_EVERY_STEPS,
+        default=None,
         metavar="N",
         help="Take an action every N steps (default: %(default)s)",
     )
@@ -104,7 +106,7 @@ Atari games.
     train_vae_parser.add_argument(
         "--number-of-epochs",
         type=int,
-        default=vae.NUMBER_OF_EPOCHS,
+        default=None,
         help="Number of epochs to train the VAE (default: %(default)s)",
     )
     train_vae_parser.add_argument(
@@ -132,7 +134,7 @@ Atari games.
     train_mdn_rnn_parser.add_argument(
         "--number-of-epochs",
         type=int,
-        default=mdn_rnn.NUMBER_OF_EPOCHS,
+        default=None,
         help="Number of epochs to train the MDN_RNN (default: %(default)s)",
     )
     train_mdn_rnn_parser.set_defaults(klass=TrainMDNRNN)
@@ -145,13 +147,13 @@ Atari games.
     train_controller_parser.add_argument(
         "--reward-threshold",
         type=int,
-        default=controller.REWARD_THRESHOLD,
+        default=None,
         help="Threshold for the reward to stop training (default: %(default)s)",
     )
     train_controller_parser.add_argument(
         "--step-limit",
         type=int,
-        default=controller.STEP_LIMIT,
+        default=None,
         help="Limit for the game steps to play - 0 means no limit (default: %(default)s)",
     )
     train_controller_parser.add_argument(
@@ -174,7 +176,7 @@ Atari games.
 
     # Remove keys not mapping directly to a kwarg
     klass = args.pop("klass")
-    game = args.pop("game")
+    game = SUPPORTED_GAMES[args.pop("game")]
     verbose = args.pop("verbose")
     observations_dir = args.pop("observations_dir")
     models_dir = args.pop("models_dir")
@@ -186,6 +188,11 @@ Atari games.
     del args["subcommand"]
 
     obj = klass(game, observations_dir, models_dir, samples_dir)
+
+    # Default to preconfigured hyperparams if not overridden on commandline
+    hyperparams = getattr(game.hyperparams, klass.hyperparams_key)
+    args = merge_args_with_hyperparams(args, hyperparams)
+
     obj(**args)
 
 

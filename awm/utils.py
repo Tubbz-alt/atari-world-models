@@ -1,3 +1,4 @@
+import dataclasses
 import logging
 from abc import ABC, abstractmethod
 from pathlib import Path
@@ -36,7 +37,7 @@ class StateSavingMixin:
 
     def load_state(self, game, stamp=None):
         # If there is a state file - load it
-        state_file = self.models_dir / game / self._build_filename(stamp)
+        state_file = self.models_dir / game.key / self._build_filename(stamp)
         if state_file.is_file():
             logger.info(
                 "%s: Loading state for %s with stamp %s",
@@ -50,7 +51,7 @@ class StateSavingMixin:
         logger.info(
             "%s: Saving state for %s with stamp %s", self.__class__.__name__, game, stamp
         )
-        state_dir = self.models_dir / game
+        state_dir = self.models_dir / game.key
         state_dir.mkdir(parents=True, exist_ok=True)
         state_file = state_dir / self._build_filename(stamp)
         torch.save(self.state_dict(), str(state_file))
@@ -60,7 +61,11 @@ class Step(ABC):
     """ A step to take to train the NN.
 
     The step objects are exposed to the commandline via the various subcommands.
+    The hyperparams_key attribute is used to access the relevant hyperparameters
+    from the HyperParams class.
     """
+
+    hyperparams_key: str
 
     def __init__(
         self,
@@ -78,3 +83,13 @@ class Step(ABC):
     @abstractmethod
     def __call__(self, *args, **kwargs):
         pass
+
+
+def merge_args_with_hyperparams(args, hyperparams):
+    result = dataclasses.asdict(hyperparams)
+
+    for k, v in args.items():
+        if v is not None:
+            result[k] = v
+
+    return result

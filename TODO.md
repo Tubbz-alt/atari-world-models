@@ -4,7 +4,6 @@
 
 * Make actions_size, ... available as (global) constants
 * Use defaults that are sensible
-* Collect all hyperparameters and put them in one place
 
 * Add progressbar to training loops (maybe tqdm)
 * Generate nice gifs showing various stages of training

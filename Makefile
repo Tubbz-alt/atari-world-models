@@ -49,7 +49,7 @@ build:
 
 tests: export DC_USER:=${DC_USER}
 tests:
-	${DC_RUN} pytest -sv ${MODULE}
+	${DC_RUN} pytest -sv ${MODULE} #-k ${K}
 
 tests-travis: export DC_USER:=${DC_USER}
 tests-travis:
