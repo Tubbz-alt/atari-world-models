@@ -47,16 +47,11 @@ class PlayGame(Step):
             z, _, _ = vae.encoder(screen)
             _, _, _, h = mdn_rnn(z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0))
 
-            action_every_steps = 10
-            step = 0
             overall_reward = 0
             steps = 0
             while True:
                 env.render()
-
-                # if step == action_every_steps:
                 action = controller(z.squeeze(0).squeeze(0), h.squeeze(0).squeeze(0))
-                # logger.info("Choosing action: %s", action)
 
                 screen, reward, done, _ = env.step(action.detach().numpy())
                 overall_reward += reward

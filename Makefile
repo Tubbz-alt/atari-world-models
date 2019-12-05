@@ -5,6 +5,11 @@ DC_RUN_TRAVIS:=${DC} -f docker-compose-travis.yml run --rm ${SERVICE}
 MODULE:=awm
 DC_USER:=$(shell id -u):$(shell id -g)
 
+ifeq ($(GAME),)
+GAME:=CarRacing-v0
+endif
+
+
 # Custom access to commandline via ARGS="..."
 deep: export DC_USER:=${DC_USER}
 deep:
@@ -60,5 +65,8 @@ style: export DC_USER:=${DC_USER}
 style:
 	${DC_RUN} ./isort.sh
 	${DC_RUN} ./black.sh
+
+clean_data:
+	rm -rf models samples observations
 
 .PHONY: deep shell build style tests tests-travis observations vae mdnrnn controller play

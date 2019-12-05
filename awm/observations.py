@@ -117,6 +117,14 @@ def gather_observations(
     After each play the collected observations are saved to a target directory.
     """
 
+    logger.info(
+        "Gathering observations for %s p=%d spp=%d aes=%d",
+        game.key,
+        number_of_plays,
+        steps_per_play,
+        action_every_steps,
+    )
+
     def padding(number):
         return "{:0%d}" % len(str(number))
 
@@ -142,7 +150,7 @@ def gather_observations(
 
         for step in range(steps_per_play):
             if step % 100 == 0:
-                logger.debug("%s: e=%d s=%d", name, play, step)
+                logger.debug("%s: p=%d s=%d", name, play, step)
             env.render()
 
             # Choose a random action
@@ -162,6 +170,7 @@ def gather_observations(
             observations.append(observation)
 
             if done:
+                logger.info("%s game finished before # steps reached", game.key)
                 break
 
         logger.info("Writing observations to disk")
