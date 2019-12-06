@@ -13,6 +13,7 @@ import gym
 import matplotlib.pyplot as plt
 import numpy as np
 from torch.utils.data import DataLoader
+from torch.utils.data.dataset import random_split
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
@@ -195,6 +196,7 @@ def load_observations(
     batch_size=32,
     drop_z_values=True,
     shuffle=True,
+    validation_percentage=0.1,
 ):
     """ Load observations from disk and return a dataset and dataloader.
 
@@ -215,5 +217,13 @@ def load_observations(
         loader=load_and_transform,
         extensions=Observation.FILE_EXTENSION,
     )
-    dataloader = DataLoader(dataset, batch_size=batch_size, shuffle=shuffle)
-    return dataloader, dataset
+
+    dataset_size = len(dataset)
+    validation_size = int(dataset_size * validation_percentage)
+    training_size = dataset_size - validation_size
+
+    validation_ds, training_ds = random_split(dataset, [validation_size, training_size])
+
+    validation_dl = DataLoader(validation_ds, batch_size=batch_size, shuffle=shuffle)
+    training_dl = DataLoader(training_ds, batch_size=batch_size, shuffle=shuffle)
+    return training_dl, validation_dl

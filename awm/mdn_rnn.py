@@ -91,7 +91,7 @@ class TrainMDNRNN(Step):
         self, number_of_epochs, create_progress_samples=CREATE_PROGRESS_SAMPLES,
     ):
         logger.info("Starting to train the MDN-RNN for game %s", self.game.key)
-        dataloader, dataset = load_observations(
+        training, _ = load_observations(
             self.game, self.observations_dir, drop_z_values=False
         )
 
@@ -104,7 +104,7 @@ class TrainMDNRNN(Step):
 
         for epoch in range(number_of_epochs):
             cumulative_loss = 0.0
-            for idx, (observations, _) in enumerate(dataloader):
+            for idx, (observations, _) in enumerate(training):
                 optimizer.zero_grad()
                 mdn_rnn.set_hidden_state()
 
@@ -124,9 +124,9 @@ class TrainMDNRNN(Step):
                 cumulative_loss += loss.data
 
             if create_progress_samples:
-                progress_samples(self.game, dataset, mdn_rnn, epoch)
+                progress_samples(self.game, training.dataset, mdn_rnn, epoch)
 
-            logger.info("{:04}: {:.3f}".format(epoch, cumulative_loss / len(dataloader)))
+            logger.info("{:04}: {:.3f}".format(epoch, cumulative_loss / len(training)))
 
         mdn_rnn.save_state()
 

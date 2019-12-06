@@ -61,34 +61,75 @@ class TrainVAE(Step):
     hyperparams_key = "vae"
 
     def __call__(
-        self, number_of_epochs, create_progress_samples=CREATE_PROGRESS_SAMPLES,
+        self,
+        number_of_epochs,
+        no_improvement_threshold,
+        create_progress_samples=CREATE_PROGRESS_SAMPLES,
     ):
         """ This is the main training loop of the VAE.
 
         Observations are loaded from *observations_dir* and training is performed
-        for *number_of_epochs* epochs.
+        for at most *number_of_epochs* epochs.
         """
-        dataloader, dataset = load_observations(self.game, self.observations_dir)
-        bs = 32
+        batch_size = 32
+        training, validation = load_observations(
+            self.game, self.observations_dir, batch_size=batch_size
+        )
         vae = VAE(self.game, self.models_dir).to(DEVICE)
         optimizer = torch.optim.Adam(vae.parameters())
 
         vae.load_state()
 
+        logger.info("Started training vae")
+
+        last_validation_loss = None
+        no_improvement_count = 0
+
         for epoch in range(number_of_epochs):
-            cumulative_loss = 0.0
-            for idx, (states, _) in enumerate(dataloader):
+            # Train
+            vae.train()
+            training_loss = 0
+            for idx, (states, _) in enumerate(training):
                 images = states["screen"]
                 optimizer.zero_grad()
                 reconstructions, mu, logvar = vae(images)
                 loss, bce, kld = loss_fn(reconstructions, images, mu, logvar)
                 loss.backward()
                 optimizer.step()
-                cumulative_loss += loss.data / bs
+                training_loss += loss.item()
+            training_loss /= len(training)
 
-            logger.info("%s: %s", epoch, cumulative_loss / len(dataloader))
+            # Validate
+            with torch.no_grad():
+                vae.eval()
+                validation_loss = 0
+                for idx, (states, _) in enumerate(validation):
+                    images = states["screen"]
+                    reconstructions, mu, logvar = vae(images)
+                    loss, bce, kld = loss_fn(reconstructions, images, mu, logvar)
+                    validation_loss += loss.item()
+                validation_loss /= len(validation)
+
+            if last_validation_loss and validation_loss >= last_validation_loss:
+                logger.info("No improvement made!")
+                no_improvement_count += 1
+            else:
+                # Reset improvement counter
+                logger.info("This is an improvement - reseting improvement counter")
+                no_improvement_count = 0
+
+            last_validation_loss = validation_loss
+
+            logger.info("e=%d tl=%d vl=%d", epoch, training_loss, validation_loss)
             if create_progress_samples:
-                progress_samples(vae, dataset, self.game, epoch, self.samples_dir)
+                progress_samples(
+                    vae, training.dataset, self.game, epoch, self.samples_dir
+                )
+
+            # Stop if no improvements for some time
+            if no_improvement_count >= no_improvement_threshold:
+                logger.info("Stopping because no improvement threshold reached")
+                break
 
         vae.save_state()
 
@@ -178,10 +219,13 @@ def loss_fn(reconstruction, original, mu, logvar):
 
 
 class PrecomputeZValues(Step):
+    hyperparams_key = None
+
     def __call__(self):
-        dataloader, dataset = load_observations(
+        training, validation = load_observations(
             self.game, self.observations_dir, batch_size=1, shuffle=False
         )
+        dataloaders = [training, validation]
         with torch.no_grad():
 
             vae = VAE(self.game, self.models_dir).to(DEVICE)
@@ -189,10 +233,14 @@ class PrecomputeZValues(Step):
 
             # Will be filled with (z, disk_location) tuples
             results = []
-            for idx, (observation, _) in enumerate(dataloader):
-                disk_location = observation["disk_location"]
-                z, _, _ = vae.encoder(observation["screen"])
-                results.append((z[0], disk_location[0]))
+            for dataloader in dataloaders:
+                for idx, (observation, _) in enumerate(dataloader):
+                    disk_location = observation["disk_location"]
+                    z, _, _ = vae.encoder(observation["screen"])
+                    results.append((z[0], disk_location[0]))
+
+        # Sort by disk location to get a valid next_z
+        results = sorted(results, key=lambda x: x[1])
 
         logger.debug("Precomputed z values")
 

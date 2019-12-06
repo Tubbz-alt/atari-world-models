@@ -35,7 +35,7 @@ class CarRacing(GymGame):
         observations=ObservationsParams(
             number_of_plays=100, steps_per_play=2000, action_every_steps=20,
         ),
-        vae=VAEParams(number_of_epochs=10,),
+        vae=VAEParams(number_of_epochs=100, no_improvement_threshold=5),
         mdnrnn=MDNRNNParams(number_of_epochs=10,),
         controller=ControllerParams(reward_threshold=600, step_limit=0,),
         play_game=PlayGameParams(step_limit=0,),

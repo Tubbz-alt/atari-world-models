@@ -11,6 +11,7 @@ class ObservationsParams:
 @dataclass
 class VAEParams:
     number_of_epochs: int
+    no_improvement_threshold: int
 
 
 @dataclass

@@ -41,7 +41,7 @@ def test_functional_car_racing():
 
     # Train the VAE - after training a state file must exist
     assert not (models_directory / game.key / "vae.torch").is_file()
-    build(TrainVAE)(number_of_epochs=2)
+    build(TrainVAE)(number_of_epochs=2, no_improvement_threshold=2)
     assert (models_directory / game.key / "vae.torch").is_file()
 
     build(PrecomputeZValues)()

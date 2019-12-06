@@ -189,9 +189,8 @@ Atari games.
 
     obj = klass(game, observations_dir, models_dir, samples_dir)
 
-    # Default to preconfigured hyperparams if not overridden on commandline
-    hyperparams = getattr(game.hyperparams, klass.hyperparams_key)
-    args = merge_args_with_hyperparams(args, hyperparams)
+    if obj.hyperparams is not None:
+        args = merge_args_with_hyperparams(args, obj.hyperparams)
 
     obj(**args)
 

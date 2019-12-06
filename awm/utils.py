@@ -82,6 +82,13 @@ class Step(ABC):
         self.observations_dir = observations_dir
         self.models_dir = models_dir
         self.samples_dir = samples_dir
+
+        # Load associated hyperparams if possible
+        if self.hyperparams_key is not None:
+            self.hyperparams = getattr(game.hyperparams, self.hyperparams_key)
+        else:
+            self.hyperparams = None
+
         super().__init__()
 
     @abstractmethod
