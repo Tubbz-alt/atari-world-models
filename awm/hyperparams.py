@@ -17,6 +17,7 @@ class VAEParams:
 @dataclass
 class MDNRNNParams:
     number_of_epochs: int
+    no_improvement_threshold: int
 
 
 @dataclass

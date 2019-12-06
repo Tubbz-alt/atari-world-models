@@ -8,7 +8,7 @@ from torch import nn
 from torch.distributions import Normal
 from torchvision.utils import save_image
 
-from . import DEVICE, MODELS_DIR, OBSERVATIONS_DIR, SAMPLES_DIR
+from . import DEVICE, SAMPLES_DIR
 from .games import GymGame
 from .observations import load_observations
 from .utils import StateSavingMixin, Step
@@ -26,7 +26,6 @@ def progress_samples(game, dataset, mdn_rnn, epoch):
     samples_dir = SAMPLES_DIR / Path(game.key)
     samples_dir.mkdir(parents=True, exist_ok=True)
 
-    logger.info("Writing MDN_RNN progress samples for game %s", game)
     with torch.no_grad():
         # Use same root directory for the models as MDNRNN
         vae = VAE(game, mdn_rnn.models_dir).to(DEVICE)
@@ -88,11 +87,20 @@ class TrainMDNRNN(Step):
     hyperparams_key = "mdnrnn"
 
     def __call__(
-        self, number_of_epochs, create_progress_samples=CREATE_PROGRESS_SAMPLES,
+        self,
+        number_of_epochs,
+        no_improvement_threshold,
+        create_progress_samples=CREATE_PROGRESS_SAMPLES,
     ):
+        """ Train the MDN RNN for at most *number_of_epoch* epochs.
+
+        """
         logger.info("Starting to train the MDN-RNN for game %s", self.game.key)
-        training, _ = load_observations(
-            self.game, self.observations_dir, drop_z_values=False
+        training, validation = load_observations(
+            self.game,
+            random_split=False,
+            observations_dir=self.observations_dir,
+            drop_z_values=False,
         )
 
         mdn_rnn = MDN_RNN(self.game, self.models_dir).to(DEVICE)
@@ -102,9 +110,13 @@ class TrainMDNRNN(Step):
 
         mini_batch_size = 1
 
+        last_validation_loss = None
+        no_improvement_count = 0
+
         for epoch in range(number_of_epochs):
-            cumulative_loss = 0.0
-            for idx, (observations, _) in enumerate(training):
+            mdn_rnn.train()
+            training_loss = 0
+            for observations, _ in training:
                 optimizer.zero_grad()
                 mdn_rnn.set_hidden_state()
 
@@ -121,12 +133,49 @@ class TrainMDNRNN(Step):
                 loss.backward()
                 optimizer.step()
 
-                cumulative_loss += loss.data
+                training_loss += loss.item()
+            training_loss /= len(training)
+
+            # Validate
+            with torch.no_grad():
+                mdn_rnn.eval()
+                validation_loss = 0
+                for observations, _ in validation:
+                    mdn_rnn.set_hidden_state()
+
+                    z_vectors = observations["z"]
+                    actions = observations["action"]
+
+                    # Add mini-batch dimension size 1
+                    actions = actions[:, None, :]
+                    z_vectors = z_vectors[:, None, :]
+                    pi, sigma, mu, _ = mdn_rnn(z_vectors, actions)
+
+                    target = observations["next_z"]
+                    loss = loss_function(pi, sigma, mu, target)
+
+                    validation_loss += loss.item()
+                validation_loss /= len(validation)
+
+            if last_validation_loss and validation_loss >= last_validation_loss:
+                logger.info("No improvement made!")
+                no_improvement_count += 1
+            else:
+                # Reset improvement counter
+                logger.info("This is an improvement - reseting improvement counter")
+                no_improvement_count = 0
+
+            last_validation_loss = validation_loss
 
             if create_progress_samples:
                 progress_samples(self.game, training.dataset, mdn_rnn, epoch)
 
-            logger.info("{:04}: {:.3f}".format(epoch, cumulative_loss / len(training)))
+            logger.info("e=%d tl=%f vl=%f", epoch, training_loss, validation_loss)
+
+            # Stop if no improvements for some time
+            if no_improvement_count >= no_improvement_threshold:
+                logger.info("Stopping because no improvement threshold reached")
+                break
 
         mdn_rnn.save_state()
 

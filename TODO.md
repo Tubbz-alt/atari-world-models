@@ -3,6 +3,7 @@
 ## General
 
 * Find hyperparameters for CarRacing
+* check samples_dir parameter in generate_samples
 * Add progressbar to training loops (maybe tqdm)
 * Generate nice gifs showing various stages of training
 

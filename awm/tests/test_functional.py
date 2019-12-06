@@ -48,7 +48,7 @@ def test_functional_car_racing():
 
     # Train the MDN_RNN - after training a state file must exist
     assert not (models_directory / game.key / "mdn_rnn.torch").is_file()
-    build(TrainMDNRNN)(number_of_epochs=2)
+    build(TrainMDNRNN)(number_of_epochs=2, no_improvement_threshold=2)
     assert (models_directory / game.key / "mdn_rnn.torch").is_file()
 
     # Train the Controller - after training a state file must exist. We set

@@ -12,8 +12,8 @@ from pathlib import Path
 import gym
 import matplotlib.pyplot as plt
 import numpy as np
-from torch.utils.data import DataLoader
-from torch.utils.data.dataset import random_split
+import torch
+from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
@@ -130,9 +130,9 @@ def gather_observations(
         return "{:0%d}" % len(str(number))
 
     padded_plays = padding(number_of_plays)
-    padded_states = padding(steps_per_play)
+    padded_observations = padding(steps_per_play)
     # A .format() style string with nice padding
-    filename = padded_plays + "-" + padded_states
+    filename = padded_plays + "-" + padded_observations
 
     name = multiprocessing.current_process().name
     stamp = datetime.datetime.now().isoformat() + "-" + name
@@ -192,10 +192,10 @@ transform = transforms.Compose(
 
 def load_observations(
     game: GymGame,
+    random_split,
     observations_dir=OBSERVATIONS_DIR,
     batch_size=32,
     drop_z_values=True,
-    shuffle=True,
     validation_percentage=0.1,
 ):
     """ Load observations from disk and return a dataset and dataloader.
@@ -222,8 +222,14 @@ def load_observations(
     validation_size = int(dataset_size * validation_percentage)
     training_size = dataset_size - validation_size
 
-    validation_ds, training_ds = random_split(dataset, [validation_size, training_size])
+    if random_split:
+        validation_ds, training_ds = torch.utils.data.dataset.random_split(
+            dataset, [validation_size, training_size]
+        )
+    else:
+        validation_ds = Subset(dataset, range(0, validation_size))
+        training_ds = Subset(dataset, range(validation_size, dataset_size))
 
-    validation_dl = DataLoader(validation_ds, batch_size=batch_size, shuffle=shuffle)
-    training_dl = DataLoader(training_ds, batch_size=batch_size, shuffle=shuffle)
+    validation_dl = DataLoader(validation_ds, batch_size=batch_size)
+    training_dl = DataLoader(training_ds, batch_size=batch_size)
     return training_dl, validation_dl

@@ -73,7 +73,10 @@ class TrainVAE(Step):
         """
         batch_size = 32
         training, validation = load_observations(
-            self.game, self.observations_dir, batch_size=batch_size
+            self.game,
+            random_split=True,
+            observations_dir=self.observations_dir,
+            batch_size=batch_size,
         )
         vae = VAE(self.game, self.models_dir).to(DEVICE)
         optimizer = torch.optim.Adam(vae.parameters())
@@ -89,8 +92,8 @@ class TrainVAE(Step):
             # Train
             vae.train()
             training_loss = 0
-            for idx, (states, _) in enumerate(training):
-                images = states["screen"]
+            for observations, _ in training:
+                images = observations["screen"]
                 optimizer.zero_grad()
                 reconstructions, mu, logvar = vae(images)
                 loss, bce, kld = loss_fn(reconstructions, images, mu, logvar)
@@ -103,8 +106,8 @@ class TrainVAE(Step):
             with torch.no_grad():
                 vae.eval()
                 validation_loss = 0
-                for idx, (states, _) in enumerate(validation):
-                    images = states["screen"]
+                for observations, _ in validation:
+                    images = observations["screen"]
                     reconstructions, mu, logvar = vae(images)
                     loss, bce, kld = loss_fn(reconstructions, images, mu, logvar)
                     validation_loss += loss.item()
@@ -120,7 +123,7 @@ class TrainVAE(Step):
 
             last_validation_loss = validation_loss
 
-            logger.info("e=%d tl=%d vl=%d", epoch, training_loss, validation_loss)
+            logger.info("e=%d tl=%f vl=%f", epoch, training_loss, validation_loss)
             if create_progress_samples:
                 progress_samples(
                     vae, training.dataset, self.game, epoch, self.samples_dir
@@ -223,7 +226,10 @@ class PrecomputeZValues(Step):
 
     def __call__(self):
         training, validation = load_observations(
-            self.game, self.observations_dir, batch_size=1, shuffle=False
+            self.game,
+            random_split=True,
+            observations_dir=self.observations_dir,
+            batch_size=1,
         )
         dataloaders = [training, validation]
         with torch.no_grad():
@@ -234,7 +240,7 @@ class PrecomputeZValues(Step):
             # Will be filled with (z, disk_location) tuples
             results = []
             for dataloader in dataloaders:
-                for idx, (observation, _) in enumerate(dataloader):
+                for observation, _ in dataloader:
                     disk_location = observation["disk_location"]
                     z, _, _ = vae.encoder(observation["screen"])
                     results.append((z[0], disk_location[0]))
@@ -245,8 +251,10 @@ class PrecomputeZValues(Step):
         logger.debug("Precomputed z values")
 
         # combine z and the next z value
-        results = zip_longest(
-            results, results[1:], fillvalue=(torch.zeros(VAE.z_size), "invalid-path")
+        results = list(
+            zip_longest(
+                results, results[1:], fillvalue=(torch.zeros(VAE.z_size), "invalid-path")
+            )
         )
 
         for ((z, disk_location), (next_z, next_disk_location)) in results:
@@ -256,3 +264,21 @@ class PrecomputeZValues(Step):
             np.save(disk_location, obj)
 
         logger.debug("Wrote precomputed z values to .npy files")
+
+        # Write samples to disk
+        with torch.no_grad():
+            images = None
+            for _ in range(32):
+                idx = random.randint(0, len(results) - 1)
+                ((z, _), (next_z, _)) = results[idx]
+                z = z.unsqueeze(0)
+                next_z = next_z.unsqueeze(0)
+
+                image = vae.decoder(z)
+                next_image = vae.decoder(next_z)
+
+                if images is None:
+                    images = torch.cat([image, next_image])
+                else:
+                    images = torch.cat([images, image, next_image])
+            save_image(images, self.samples_dir / self.game.key / "z_next_z.png")
