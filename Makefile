@@ -21,6 +21,11 @@ observations:
 	xhost +
 	${DC_RUN} python -m ${MODULE} -v ${GAME} gather-observations
 
+watch-observations: export DC_USER:=${DC_USER}
+watch-observations:
+	xhost +
+	${DC_RUN} python -m ${MODULE} -v ${GAME} gather-observations --cpus-to-use 1 --show-screen --number-of-plays 1
+
 vae: export DC_USER:=${DC_USER}
 vae:
 	xhost +
