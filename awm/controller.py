@@ -11,9 +11,7 @@ import torch
 from torch import nn
 from xvfbwrapper import Xvfb
 
-from . import MODELS_DIR
 from .games import GymGame
-from .mdn_rnn import MDN_RNN
 from .utils import StateSavingMixin, Step
 from .vae import VAE
 

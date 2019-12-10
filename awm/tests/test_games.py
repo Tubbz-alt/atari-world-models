@@ -1,5 +1,3 @@
-import copy
-
 from ..games import SUPPORTED_GAMES, GymGame
 
 

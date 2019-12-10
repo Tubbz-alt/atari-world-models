@@ -1,13 +1,8 @@
 import logging
-from pathlib import Path
 
 import gym
 import torch
-from torchvision import transforms
-from torchvision.utils import save_image
-from xvfbwrapper import Xvfb
 
-from . import MODELS_DIR
 from .controller import Controller
 from .mdn_rnn import MDN_RNN
 from .observations import transform

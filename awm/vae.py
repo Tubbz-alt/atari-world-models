@@ -1,21 +1,15 @@
 import logging
-import os
 import random
-import time
 from itertools import zip_longest
 from pathlib import Path
 
-import gym
-import matplotlib.pyplot as plt
 import numpy as np
-import retro
 import torch
 import torch.nn.functional as F
 from torch import nn
-from torchvision import datasets, transforms
 from torchvision.utils import save_image
 
-from . import DEVICE, MODELS_DIR
+from . import DEVICE
 from .games import GymGame
 from .observations import load_observations
 from .utils import StateSavingMixin, Step

@@ -8,7 +8,7 @@ from torch import nn
 from torch.distributions import Normal
 from torchvision.utils import save_image
 
-from . import DEVICE, SAMPLES_DIR
+from . import DEVICE
 from .games import GymGame
 from .observations import load_observations
 from .utils import StateSavingMixin, Step
@@ -19,11 +19,11 @@ CREATE_PROGRESS_SAMPLES = True
 logger = logging.getLogger(__name__)
 
 
-def progress_samples(game, dataset, mdn_rnn, epoch):
+def progress_samples(game, dataset, mdn_rnn, epoch, samples_dir):
     """ Create progress samples to visualize the progress of our MDN-RNN.
     """
 
-    samples_dir = SAMPLES_DIR / Path(game.key)
+    samples_dir = samples_dir / Path(game.key)
     samples_dir.mkdir(parents=True, exist_ok=True)
 
     with torch.no_grad():
@@ -108,7 +108,7 @@ class TrainMDNRNN(Step):
 
         optimizer = torch.optim.Adam(mdn_rnn.parameters(), lr=1e-3)
 
-        mini_batch_size = 1
+        # mini_batch_size = 1
 
         last_validation_loss = None
         no_improvement_count = 0
@@ -168,7 +168,9 @@ class TrainMDNRNN(Step):
             last_validation_loss = validation_loss
 
             if create_progress_samples:
-                progress_samples(self.game, training.dataset, mdn_rnn, epoch)
+                progress_samples(
+                    self.game, training.dataset, mdn_rnn, epoch, self.samples_dir
+                )
 
             logger.info("e=%d tl=%f vl=%f", epoch, training_loss, validation_loss)
 

@@ -1,7 +1,6 @@
 import dataclasses
 import datetime
 import logging
-import math
 import multiprocessing
 import time
 import typing
@@ -10,14 +9,12 @@ from multiprocessing import Pool
 from pathlib import Path
 
 import gym
-import matplotlib.pyplot as plt
 import numpy as np
 import torch
 from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
-from . import MODELS_DIR, OBSERVATIONS_DIR, SAMPLES_DIR
 from .games import GymGame
 from .utils import Step, spread
 
@@ -193,7 +190,7 @@ transform = transforms.Compose(
 def load_observations(
     game: GymGame,
     random_split,
-    observations_dir=OBSERVATIONS_DIR,
+    observations_dir,
     batch_size=32,
     drop_z_values=True,
     validation_percentage=0.1,

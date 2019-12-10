@@ -1,11 +1,10 @@
 import dataclasses
 import logging
 from abc import ABC, abstractmethod
-from pathlib import Path
 
 import torch
 
-from . import DEVICE, MODELS_DIR, OBSERVATIONS_DIR, SAMPLES_DIR
+from . import DEVICE
 
 logger = logging.getLogger(__name__)
 
@@ -72,11 +71,7 @@ class Step(ABC):
     hyperparams_key: str
 
     def __init__(
-        self,
-        game,
-        observations_dir=OBSERVATIONS_DIR,
-        models_dir=MODELS_DIR,
-        samples_dir=SAMPLES_DIR,
+        self, game, observations_dir, models_dir, samples_dir,
     ):
         self.game = game
         self.observations_dir = observations_dir

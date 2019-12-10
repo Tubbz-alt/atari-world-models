@@ -2,8 +2,10 @@
 
 ## General
 
+* random starts when gathering observations - maybe not
+* different sampling policy for actions
+* observation viewer
 * Find hyperparameters for CarRacing
-* check samples_dir parameter in generate_samples
 * Add progressbar to training loops (maybe tqdm)
 * Generate nice gifs showing various stages of training
 
@@ -15,5 +17,6 @@
 
 ## Controller
 
+* steadily increase the length a game is played?
 * When training the controller we should average over the reward n times (submit the same solution
   n times)

@@ -63,6 +63,7 @@ tests-travis:
 # Do auto-formatting and import sorting
 style: export DC_USER:=${DC_USER}
 style:
+	${DC_RUN} pyflakes awm
 	${DC_RUN} ./isort.sh
 	${DC_RUN} ./black.sh
 
