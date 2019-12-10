@@ -54,7 +54,9 @@ def test_functional_car_racing():
     # Train the Controller - after training a state file must exist. We set
     # the threshold really high, s.t. training will finish in epoch 1
     assert not (models_directory / game.key / "controller-1.torch").is_file()
-    build(TrainController)(step_limit=5, reward_threshold=2000)
+    build(TrainController)(
+        step_limit=5, reward_threshold=2000, average_over=2, population_size=2
+    )
     assert (models_directory / game.key / "controller-1.torch").is_file()
 
     # Capture X11 in Xvfb

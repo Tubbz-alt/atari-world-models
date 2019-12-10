@@ -4,14 +4,13 @@ from argparse import RawDescriptionHelpFormatter
 from pathlib import Path
 
 from . import (
+    CPUS_TO_USE,
+    CREATE_PROGRESS_SAMPLES,
     MODELS_DIR,
     OBSERVATIONS_DIR,
     SAMPLES_DIR,
+    SHOW_SCREEN,
     VERSION,
-    controller,
-    mdn_rnn,
-    observations,
-    vae,
 )
 from .controller import TrainController
 from .games import SUPPORTED_GAMES
@@ -70,13 +69,13 @@ Atari games.
     observations_parser.add_argument(
         "--show-screen",
         action="store_true",
-        default=observations.SHOW_SCREEN,
+        default=SHOW_SCREEN,
         help="Show the gym screen when playing (default: %(default)s)",
     )
     observations_parser.add_argument(
         "--cpus-to-use",
         type=int,
-        default=observations.CPUS_TO_USE,
+        default=CPUS_TO_USE,
         help="CPUs to use in gathering observations (default: %(default)s)",
     )
     observations_parser.add_argument(
@@ -112,7 +111,7 @@ Atari games.
     train_vae_parser.add_argument(
         "--dont-create-progress-samples",
         action="store_false",
-        default=vae.CREATE_PROGRESS_SAMPLES,
+        default=CREATE_PROGRESS_SAMPLES,
         dest="create_progress_samples",
         help="Don't create sample pictures to visualize the learning progress (default: %(default)s)",
     )
@@ -127,7 +126,7 @@ Atari games.
     train_mdn_rnn_parser.add_argument(
         "--dont-create-progress-samples",
         action="store_false",
-        default=mdn_rnn.CREATE_PROGRESS_SAMPLES,
+        default=CREATE_PROGRESS_SAMPLES,
         dest="create_progress_samples",
         help="Don't create sample pictures to visualize the learning progress (default: %(default)s)",
     )
@@ -151,6 +150,12 @@ Atari games.
         help="Threshold for the reward to stop training (default: %(default)s)",
     )
     train_controller_parser.add_argument(
+        "--cpus-to-use",
+        type=int,
+        default=CPUS_TO_USE,
+        help="CPUs to use in training controller (default: %(default)s)",
+    )
+    train_controller_parser.add_argument(
         "--step-limit",
         type=int,
         default=None,
@@ -159,7 +164,7 @@ Atari games.
     train_controller_parser.add_argument(
         "--show-screen",
         action="store_true",
-        default=controller.SHOW_SCREEN,
+        default=SHOW_SCREEN,
         help="Show the gym screen when training (default: %(default)s)",
     )
     train_controller_parser.set_defaults(klass=TrainController)

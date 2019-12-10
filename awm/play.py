@@ -62,8 +62,9 @@ class PlayGame(Step):
                 steps += 1
             env.close()
 
-            logger.info(
-                "Game %s finished with reward %d", self.game.key, 1000 - overall_reward
-            )
+            # Transform reward to be useful to CMA-ES
+            overall_reward = self.game.transform_overall_reward(overall_reward)
 
-        return 1000 - overall_reward
+            logger.info("Game %s finished with reward %d", self.game.key, overall_reward)
+
+        return overall_reward

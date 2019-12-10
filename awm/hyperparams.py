@@ -24,6 +24,8 @@ class MDNRNNParams:
 class ControllerParams:
     reward_threshold: int
     step_limit: int
+    average_over: int
+    population_size: int
 
 
 @dataclass

@@ -42,6 +42,11 @@ controller:
 	xhost +
 	${DC_RUN} python -m ${MODULE} -v ${GAME} train-controller
 
+watch-controller: export DC_USER:=${DC_USER}
+watch-controller:
+	xhost +
+	${DC_RUN} python -m ${MODULE} -v ${GAME} train-controller --cpus-to-use 1 --show-screen
+
 play: export DC_USER:=${DC_USER}
 play:
 	xhost +

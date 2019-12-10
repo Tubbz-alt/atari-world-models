@@ -8,13 +8,11 @@ from torch import nn
 from torch.distributions import Normal
 from torchvision.utils import save_image
 
-from . import DEVICE
+from . import CREATE_PROGRESS_SAMPLES, DEVICE
 from .games import GymGame
 from .observations import load_observations
 from .utils import StateSavingMixin, Step
 from .vae import VAE
-
-CREATE_PROGRESS_SAMPLES = True
 
 logger = logging.getLogger(__name__)
 

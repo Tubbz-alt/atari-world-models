@@ -11,11 +11,10 @@ import torch
 from torch import nn
 from xvfbwrapper import Xvfb
 
+from . import CPUS_TO_USE, SHOW_SCREEN
 from .games import GymGame
 from .utils import StateSavingMixin, Step
 from .vae import VAE
-
-SHOW_SCREEN = False
 
 logger = logging.getLogger(__name__)
 
@@ -41,11 +40,9 @@ def worker(game, play_game, solution_q, reward_q, stop, show_screen):
         vdisplay.stop()
 
 
-def get_best_averaged(solution_q, reward_q, solutions, rewards):
+def get_best_averaged(solution_q, reward_q, solutions, rewards, average_over):
     best_reward = sorted(rewards.items(), key=lambda x: x[1])[0]
     best_solution = solutions[best_reward[0]]
-
-    average_over = 10
 
     logger.info(
         "Submitting best solution %d times (best_reward: %s)", average_over, best_reward
@@ -66,7 +63,13 @@ class TrainController(Step):
     hyperparams_key = "controller"
 
     def __call__(
-        self, reward_threshold, step_limit, show_screen=SHOW_SCREEN,
+        self,
+        reward_threshold,
+        step_limit,
+        average_over,
+        population_size,
+        show_screen=SHOW_SCREEN,
+        cpus_to_use=CPUS_TO_USE,
     ):
         logger.info("Training the controller for game %s", self.game)
 
@@ -90,8 +93,8 @@ class TrainController(Step):
 
         parameters = next(controller.parameters())
         sigma = 0.1
-        population_size = 10
 
+        logger.info("Using cma with population_size %d", population_size)
         es = cma.CMAEvolutionStrategy(
             parameters.view(-1).detach(), sigma, {"popsize": population_size}
         )
@@ -102,7 +105,7 @@ class TrainController(Step):
         solution_q = Queue()
         reward_q = Queue()
         stop = Event()
-        for _ in range(multiprocessing.cpu_count()):
+        for _ in range(cpus_to_use):
             Process(
                 target=worker,
                 args=(self.game, play_game, solution_q, reward_q, stop, show_screen,),
@@ -119,15 +122,23 @@ class TrainController(Step):
             # the reward to the solution.
             solutions = dict(enumerate(solutions))
 
-            logger.info("Submitting solutions")
+            logger.info("Submitting solutions - each solution %d times", average_over)
             for solution_id, solution in solutions.items():
-                solution_q.put((solution_id, solution))
+                for _ in range(average_over):
+                    solution_q.put((solution_id, solution))
 
             logger.info("Collecting rewards")
+            # This will map solution_ids to lists of rewards
             rewards = {}
-            for _ in range(len(solutions)):
+            for _ in range(len(solutions) * average_over):
                 solution_id, reward = reward_q.get()
-                rewards[solution_id] = reward
+                rewards.setdefault(solution_id, []).append(reward)
+
+            # Calculate the mean
+            logger.info("Calculating mean of rewards")
+            rewards = {
+                solution_id: np.mean(rewards) for solution_id, rewards in rewards.items()
+            }
 
             def sorted_values(dict_):
                 result = []
@@ -143,7 +154,7 @@ class TrainController(Step):
             # evaluation and saving
             if epoch % do_eval == do_eval - 1:
                 solution, reward = get_best_averaged(
-                    solution_q, reward_q, solutions, rewards
+                    solution_q, reward_q, solutions, rewards, average_over
                 )
 
                 if highest_reward is None or highest_reward > reward:

@@ -9,12 +9,10 @@ import torch.nn.functional as F
 from torch import nn
 from torchvision.utils import save_image
 
-from . import DEVICE
+from . import CREATE_PROGRESS_SAMPLES, DEVICE
 from .games import GymGame
 from .observations import load_observations
 from .utils import StateSavingMixin, Step
-
-CREATE_PROGRESS_SAMPLES = True
 
 logger = logging.getLogger(__name__)
 
@@ -63,7 +61,9 @@ class TrainVAE(Step):
         """ This is the main training loop of the VAE.
 
         Observations are loaded from *observations_dir* and training is performed
-        for at most *number_of_epochs* epochs.
+        for at most *number_of_epochs* epochs or aborted earlier if no improvements
+        are made to the validation data for *no_improvement_threshold* number
+        of epochs.
         """
         batch_size = 32
         training, validation = load_observations(

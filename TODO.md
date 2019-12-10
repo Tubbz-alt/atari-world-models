@@ -2,18 +2,10 @@
 
 ## General
 
-* random starts when gathering observations - maybe not
-* different sampling policy for actions
-* observation viewer
-* Find hyperparameters for CarRacing
-* Add progressbar to training loops (maybe tqdm)
+* Improve documentation
+
+* Settle on hyperparameters for CarRacing
 * Generate nice gifs showing various stages of training
-
-## VAE
-
-* Add batch size to train-vae
-* Add rotations 90, 180, 270 to dataset transformations
-* Add split into train / test dataset and think about adding early stopping functionality
 
 ## Controller
 

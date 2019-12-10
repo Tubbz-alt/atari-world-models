@@ -15,11 +15,9 @@ from torch.utils.data import DataLoader, Subset
 from torchvision import datasets, transforms
 from xvfbwrapper import Xvfb
 
+from . import CPUS_TO_USE, SHOW_SCREEN
 from .games import GymGame
 from .utils import Step, spread
-
-SHOW_SCREEN: bool = False
-CPUS_TO_USE: int = multiprocessing.cpu_count()
 
 logger = logging.getLogger(__name__)
 
