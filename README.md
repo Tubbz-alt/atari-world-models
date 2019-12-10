@@ -161,7 +161,7 @@ TODO
 
 The whole system is contained in a Docker container - you can either directly interact with the container
 via docker-compose or use the provided Makefile targets. Most Makefile targets use sane defaults - if you need
-to fine-tune, then you can use the *deep* target to access the various subcommands and pass arguments.
+to fine-tune, then you can use the default target to access the various subcommands and pass arguments.
 
 ## Full training
 
