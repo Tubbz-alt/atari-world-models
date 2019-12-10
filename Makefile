@@ -50,7 +50,12 @@ watch-controller:
 play: export DC_USER:=${DC_USER}
 play:
 	xhost +
-	${DC_RUN} python -m ${MODULE} -v ${GAME} play-game
+	${DC_RUN} python -m ${MODULE} -v ${GAME} play-game --stamp best
+
+record: export DC_USER:=${DC_USER}
+record:
+	xhost +
+	${DC_RUN} python -m ${MODULE} -v ${GAME} play-game --stamp best --record
 
 # Create a shell into the Docker container
 shell: export DC_USER:=${DC_USER}

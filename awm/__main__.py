@@ -174,7 +174,12 @@ Atari games.
         help="Play the game using the World Model",
         description="Play the game using the World Model",
     )
-    play_game_parser.add_argument("--stamp", type=int, default=None)
+    play_game_parser.add_argument(
+        "--stamp", type=str, default=None, help="Which controller state to load?"
+    )
+    play_game_parser.add_argument(
+        "--record", action="store_true", default=False, help="Record screen to disk"
+    )
     play_game_parser.set_defaults(klass=PlayGame)
 
     args = vars(parser.parse_args())

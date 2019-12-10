@@ -24,7 +24,8 @@ class GymGame(metaclass=RegisterGame):
     action_vector_size: int
     hyperparams: HyperParams
 
-    def transform_overall_reward(self, overall_reward):
+    @staticmethod
+    def transform_overall_reward(overall_reward):
         raise NotImplementedError()
 
 
@@ -41,10 +42,11 @@ class CarRacing(GymGame):
         vae=VAEParams(number_of_epochs=100, no_improvement_threshold=10),
         mdnrnn=MDNRNNParams(number_of_epochs=100, no_improvement_threshold=5),
         controller=ControllerParams(
-            reward_threshold=600, step_limit=0, average_over=5, population_size=5
+            reward_threshold=600, step_limit=0, average_over=10, population_size=10
         ),
         play_game=PlayGameParams(step_limit=0,),
     )
 
-    def transform_overall_reward(self, overall_reward):
+    @staticmethod
+    def transform_overall_reward(overall_reward):
         return 1000 - overall_reward

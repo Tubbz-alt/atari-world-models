@@ -46,6 +46,10 @@ class StateSavingMixin:
                 stamp,
             )
             self.load_state_dict(torch.load(str(state_file), map_location=DEVICE))
+        else:
+            logger.warning(
+                "%s: statefile %s not found", self.__class__.__name__, state_file
+            )
 
     def save_state(self, stamp=None):
         logger.info(

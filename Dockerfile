@@ -7,7 +7,7 @@ RUN apt-get update &&  \
     apt-get install -y \
       python3-tk sox libsox-dev libsox-fmt-all \
       libgl1-mesa-dri libgl1-mesa-glx freeglut3-dev \
-      swig xvfb
+      swig xvfb ffmpeg
 
 ADD requirements.txt /requirements.txt
 RUN pip install -r /requirements.txt

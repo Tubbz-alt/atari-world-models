@@ -2,6 +2,7 @@ import logging
 
 import gym
 import torch
+from gym.wrappers.monitor import Monitor
 
 from .controller import Controller
 from .mdn_rnn import MDN_RNN
@@ -15,7 +16,7 @@ logger = logging.getLogger(__name__)
 class PlayGame(Step):
     hyperparams_key = "play_game"
 
-    def __call__(self, step_limit, solution=None, stamp=None):
+    def __call__(self, step_limit, solution=None, stamp=None, record=False):
         logger.info("Playing game %s", self.game)
 
         with torch.no_grad():
@@ -32,6 +33,8 @@ class PlayGame(Step):
             mdn_rnn.load_state()
 
             env = gym.make(self.game.key)
+            if record:
+                env = Monitor(env, "monitor", force=True)
 
             action = torch.zeros(self.game.action_vector_size)
 
@@ -44,11 +47,13 @@ class PlayGame(Step):
 
             overall_reward = 0
             steps = 0
+
             while True:
                 env.render()
                 action = controller(z.squeeze(0).squeeze(0), h.squeeze(0).squeeze(0))
 
                 screen, reward, done, _ = env.step(action.detach().numpy())
+
                 overall_reward += reward
                 screen = transform(screen)
                 screen.unsqueeze_(0)

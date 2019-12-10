@@ -74,7 +74,8 @@ class TrainController(Step):
         logger.info("Training the controller for game %s", self.game)
 
         controller = Controller(self.game, self.models_dir)
-        controller.load_state(stamp=53)
+        controller.load_state(stamp="best")
+        best_reward = controller.load_best_reward()
 
         from .play import PlayGame
 
@@ -100,18 +101,17 @@ class TrainController(Step):
         )
 
         epoch = 0
-        do_eval = 2  # evaluate every other epoch
 
         solution_q = Queue()
         reward_q = Queue()
         stop = Event()
+        processes = []
         for _ in range(cpus_to_use):
-            Process(
+            p = Process(
                 target=worker,
                 args=(self.game, play_game, solution_q, reward_q, stop, show_screen,),
             ).start()
-
-        highest_reward = None
+            processes.append(p)
 
         while not es.stop():
             # solutions is a list containing *population_size* numpy arrays
@@ -152,28 +152,33 @@ class TrainController(Step):
             es.disp()
 
             # evaluation and saving
-            if epoch % do_eval == do_eval - 1:
+            if epoch % 2 == 1:
                 solution, reward = get_best_averaged(
                     solution_q, reward_q, solutions, rewards, average_over
                 )
 
-                if highest_reward is None or highest_reward > reward:
-                    highest_reward = reward
-                    logger.info("Found new highest reward: %s", highest_reward)
+                if best_reward is None or best_reward > reward:
+                    best_reward = reward
+                    logger.info("Found better reward: %s", best_reward)
 
                     # Load solution into controller and then save controller state
                     # to disk
                     controller = Controller(self.game, self.models_dir)
                     controller.load_solution(solution)
+                    # Save twice - for easier loading
                     controller.save_state(stamp=str(epoch))
+                    controller.save_state(stamp="best")
+                    controller.save_best_reward(best_reward)
 
-                if highest_reward and highest_reward <= reward_threshold:
+                if best_reward and best_reward <= reward_threshold:
                     break
 
             epoch += 1
 
         # Signal stop to all workers
         stop.set()
+        for p in processes:
+            p.join()
 
 
 class Controller(StateSavingMixin, nn.Module):
@@ -181,6 +186,7 @@ class Controller(StateSavingMixin, nn.Module):
         super().__init__()
         self.game = game
         self.models_dir = models_dir
+        self.reward_file = self.models_dir / self.game.key / "controller_best_reward"
 
         hidden_size = 256
 
@@ -201,6 +207,22 @@ class Controller(StateSavingMixin, nn.Module):
 
         for actual, given in zip(weights, weights_from_solution):
             actual.data.copy_(given)
+
+    def load_best_reward(self):
+        if self.reward_file.is_file():
+            with open(self.reward_file, "r") as f:
+                reward = float(f.read().strip())
+            logger.info("Loaded best reward: %s", reward)
+        else:
+            logger.warning("No reward file found")
+            reward = None
+        return reward
+
+    def save_best_reward(self, best_reward):
+        (self.models_dir / self.game.key).mkdir(exist_ok=True, parents=True)
+        with open(self.reward_file, "w") as f:
+            f.write(str(best_reward) + "\n")
+            logger.info("Written best reward: %s", best_reward)
 
     def forward(self, z, h):
         return self.f(torch.cat((z, h)))
