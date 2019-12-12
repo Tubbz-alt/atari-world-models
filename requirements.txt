@@ -12,3 +12,4 @@ pytorch-ignite==0.2.1
 xvfbwrapper==0.2.9
 cma==2.7.0
 pyflakes==2.1.1
+tqdm==2.2.3

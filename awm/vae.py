@@ -8,6 +8,7 @@ import torch
 import torch.nn.functional as F
 from torch import nn
 from torchvision.utils import save_image
+from tqdm import tqdm
 
 from . import CREATE_PROGRESS_SAMPLES, DEVICE
 from .games import GymGame
@@ -86,7 +87,8 @@ class TrainVAE(Step):
             # Train
             vae.train()
             training_loss = 0
-            for observations, _ in training:
+            logger.info("Starting training")
+            for observations, _ in tqdm(training):
                 images = observations["screen"]
                 optimizer.zero_grad()
                 reconstructions, mu, logvar = vae(images)
@@ -100,7 +102,8 @@ class TrainVAE(Step):
             with torch.no_grad():
                 vae.eval()
                 validation_loss = 0
-                for observations, _ in validation:
+                logger.info("Starting validation")
+                for observations, _ in tqdm(validation):
                     images = observations["screen"]
                     reconstructions, mu, logvar = vae(images)
                     loss, bce, kld = loss_fn(reconstructions, images, mu, logvar)
@@ -123,12 +126,12 @@ class TrainVAE(Step):
                     vae, training.dataset, self.game, epoch, self.samples_dir
                 )
 
+            vae.save_state()
+
             # Stop if no improvements for some time
             if no_improvement_count >= no_improvement_threshold:
                 logger.info("Stopping because no improvement threshold reached")
                 break
-
-        vae.save_state()
 
 
 class VAE(StateSavingMixin, nn.Module):
