@@ -13,6 +13,7 @@ from xvfbwrapper import Xvfb
 
 from . import CPUS_TO_USE, SHOW_SCREEN
 from .games import GymGame
+from .mdn_rnn import MDN_RNN
 from .utils import StateSavingMixin, Step
 from .vae import VAE
 
@@ -59,6 +60,12 @@ def get_best_averaged(solution_q, reward_q, solutions, rewards, average_over):
     return best_solution, np.mean(rewards)
 
 
+def get_best(solutions, rewards):
+    best_reward = sorted(rewards.items(), key=lambda x: x[1])[0]
+    best_solution = solutions[best_reward[0]]
+    return best_solution, best_reward[1]
+
+
 class TrainController(Step):
     hyperparams_key = "controller"
 
@@ -93,7 +100,7 @@ class TrainController(Step):
         # 2: break 0 -> 1
 
         parameters = next(controller.parameters())
-        sigma = 0.1
+        sigma = 0.5
 
         logger.info("Using cma with population_size %d", population_size)
         es = cma.CMAEvolutionStrategy(
@@ -110,7 +117,8 @@ class TrainController(Step):
             p = Process(
                 target=worker,
                 args=(self.game, play_game, solution_q, reward_q, stop, show_screen,),
-            ).start()
+            )
+            p.start()
             processes.append(p)
 
         while not es.stop():
@@ -133,6 +141,7 @@ class TrainController(Step):
             for _ in range(len(solutions) * average_over):
                 solution_id, reward = reward_q.get()
                 rewards.setdefault(solution_id, []).append(reward)
+            logger.info("rewards: %s", rewards)
 
             # Calculate the mean
             logger.info("Calculating mean of rewards")
@@ -151,27 +160,25 @@ class TrainController(Step):
             es.tell(sorted_values(solutions), sorted_values(rewards))
             es.disp()
 
-            # evaluation and saving
-            if epoch % 2 == 1:
-                solution, reward = get_best_averaged(
-                    solution_q, reward_q, solutions, rewards, average_over
-                )
+            solution, reward = get_best(solutions, rewards)
 
-                if best_reward is None or best_reward > reward:
-                    best_reward = reward
-                    logger.info("Found better reward: %s", best_reward)
+            if best_reward is None or best_reward > reward:
+                best_reward = reward
+                logger.info("Found better reward: %s", best_reward)
 
-                    # Load solution into controller and then save controller state
-                    # to disk
-                    controller = Controller(self.game, self.models_dir)
-                    controller.load_solution(solution)
-                    # Save twice - for easier loading
-                    controller.save_state(stamp=str(epoch))
-                    controller.save_state(stamp="best")
-                    controller.save_best_reward(best_reward)
+                # Load solution into controller and then save controller state
+                # to disk
+                controller = Controller(self.game, self.models_dir)
+                controller.load_solution(solution)
+                # Save twice - for easier loading
+                controller.save_state(stamp=str(epoch))
+                controller.save_state(stamp="best")
+                controller.save_best_reward(best_reward)
+            else:
+                logger.info("No better reward than %s found", best_reward)
 
-                if best_reward and best_reward <= reward_threshold:
-                    break
+            if best_reward and best_reward <= reward_threshold:
+                break
 
             epoch += 1
 
@@ -188,7 +195,7 @@ class Controller(StateSavingMixin, nn.Module):
         self.models_dir = models_dir
         self.reward_file = self.models_dir / self.game.key / "controller_best_reward"
 
-        hidden_size = 256
+        hidden_size = MDN_RNN.hidden_units
 
         self.f = nn.Sequential(
             nn.Linear(VAE.z_size + hidden_size, self.game.action_vector_size), nn.Tanh(),

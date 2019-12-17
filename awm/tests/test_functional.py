@@ -57,7 +57,7 @@ def test_functional_car_racing():
     build(TrainController)(
         step_limit=5, reward_threshold=2000, average_over=2, population_size=2
     )
-    assert (models_directory / game.key / "controller-1.torch").is_file()
+    assert (models_directory / game.key / "controller-0.torch").is_file()
 
     # Capture X11 in Xvfb
     vdisplay = Xvfb()
