@@ -17,6 +17,10 @@
 
 ![Untrained Controller](/images/untrained-controller.gif?raw=true "Untrained Controller")
 
+### 50 hours of training the controller
+
+![Trained Controller](/images/trained-controller-50.gif?raw=true "Trained Controller")
+
 # Summary
 
 This project attempts to recreate the approach described in the first part of
@@ -128,7 +132,7 @@ These are the time estimates in hours including the actual time spent on a topic
 | 12 | 9 | 2, 4, 2, 1 | [Literature and tutorial research / reading](#t-lit-research) | 
 | 8  | 4 | 2, 2 | [Deliverables for Exercise 1](#t-del-ex1) | 
 | 2  |   |  | [Start with the report](#t-start-report) |
-| 16 |   | 3, 3, 5, 3, 3, 4, 4, 3, 4 | [Implement approach from paper](#t-implement) |
+| 16 |   | 3, 3, 5, 3, 3, 4, 4, 3, 4, 4, 3 | [Implement approach from paper](#t-implement) |
 | 16 |   |  | [Try other games and fine-tune](#t-fine-tune) | 
 | 4  |   |  | [Add findings to report and iterate](#t-start-report) |
 | 12 |   |  | [Network decisions (optional)](#t-decisions) |
@@ -153,7 +157,11 @@ is able to achieve an average score of 800 per 10 runs.
 
 ## Actual
 
-TODO
+Our network is currently only able to achieve a score of up to 300 points - this is partialy due to the
+fact that training the controller is very expensive. The current version of the controller was trained
+on 4 CPUs for around ~50 hours, while the controller in the paper was trainined on a 64 core machine
+for several thousand generations. The paper is also not very clear on certain aspects of the MDN-RNN, further
+investigation/tuning is still necessary.
 
 # Usage
 

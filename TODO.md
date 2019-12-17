@@ -1,12 +1,4 @@
-# TODO
+## MDNRNN
 
-## General
-
-* Improve documentation
-
-* Settle on hyperparameters for CarRacing
-* Generate nice gifs showing various stages of training
-
-## Controller
-
-* steadily increase the length a game is played?
+* Small test case to show the effectiveness of the RNN part
+* Extend small test case to evaluate the MDN part
