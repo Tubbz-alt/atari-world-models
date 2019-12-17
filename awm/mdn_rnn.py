@@ -2,11 +2,13 @@ import logging
 import random
 from pathlib import Path
 
+import numpy as np
 import torch
 import torch.nn.functional as F
 from torch import nn
 from torch.distributions import Normal
 from torchvision.utils import save_image
+from tqdm import tqdm
 
 from . import CREATE_PROGRESS_SAMPLES, DEVICE
 from .games import GymGame
@@ -15,6 +17,30 @@ from .utils import StateSavingMixin, Step
 from .vae import VAE
 
 logger = logging.getLogger(__name__)
+
+
+def sample(pi, sigma, mu):
+    """ Take a sample from the gaussian mixtures output by the MDN.
+
+    The Gumbel sampling idea is taken from
+    https://github.com/hardmaru/pytorch_notebooks/blob/master/mixture_density_networks.ipynb
+    """
+
+    def gumbel_sample(x, axis):
+        """ Pick one of our gaussians """
+        x = x.data.numpy()
+        z = np.random.gumbel(loc=0, scale=1, size=x.shape)
+        z = np.log(x) + z
+        return z.argmax(axis=axis)
+
+    k = gumbel_sample(pi, 2)
+    sigma = sigma.squeeze(0).squeeze(0)
+    mu = mu.squeeze(0).squeeze(0)
+
+    indices = (k[-1][-1], np.arange(VAE.z_size))
+    randoms = np.random.randn(VAE.z_size)
+    result = randoms * sigma.data.numpy()[indices] + mu.data.numpy()[indices]
+    return torch.tensor(result, dtype=torch.float32)
 
 
 def progress_samples(game, dataset, mdn_rnn, epoch, samples_dir):
@@ -45,13 +71,12 @@ def progress_samples(game, dataset, mdn_rnn, epoch, samples_dir):
             for _ in range(16):
                 # Do 16 prediction steps into the future
                 pi, sigma, mu, _ = mdn_rnn(z, action)
-                sampled = torch.sum(pi * torch.normal(mu, sigma), dim=2)
-                sampled = sampled.view(1, VAE.z_size)
 
+                sampled = sample(pi, sigma, mu)
                 z = sampled
 
-                next_image = vae.decoder(sampled)
-                z = z[:, None, :]
+                next_image = vae.decoder(sampled.view(-1, 32))
+                z = z.unsqueeze(0).unsqueeze(0)
 
                 images = torch.cat([images, next_image])
 
@@ -70,13 +95,14 @@ def loss_function(pi, sigma, mu, target):
 
     http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.120.5685&rep=rep1&type=pdf
     """
-    sequence = 1
+    sequence = pi.size()[1]
 
     target = target.view(-1, sequence, 1, VAE.z_size)
-
     normal_distributions = Normal(mu, sigma)
+
     # log_prob(y) ... log of pdf at value y
     log_probabilities = torch.exp(pi * normal_distributions.log_prob(target))
+
     result = -torch.log(torch.sum(log_probabilities, dim=2))
     return torch.mean(result)
 
@@ -104,7 +130,7 @@ class TrainMDNRNN(Step):
         mdn_rnn = MDN_RNN(self.game, self.models_dir).to(DEVICE)
         mdn_rnn.load_state()
 
-        optimizer = torch.optim.Adam(mdn_rnn.parameters(), lr=1e-3)
+        optimizer = torch.optim.Adam(mdn_rnn.parameters())
 
         # mini_batch_size = 1
 
@@ -114,7 +140,8 @@ class TrainMDNRNN(Step):
         for epoch in range(number_of_epochs):
             mdn_rnn.train()
             training_loss = 0
-            for observations, _ in training:
+            logger.info("Starting training")
+            for observations, _ in tqdm(training):
                 optimizer.zero_grad()
                 mdn_rnn.set_hidden_state()
 
@@ -127,18 +154,21 @@ class TrainMDNRNN(Step):
                 pi, sigma, mu, _ = mdn_rnn(z_vectors, actions)
 
                 target = observations["next_z"]
+                # print("tgt size", target.size())
                 loss = loss_function(pi, sigma, mu, target)
                 loss.backward()
                 optimizer.step()
 
                 training_loss += loss.item()
+
             training_loss /= len(training)
 
             # Validate
             with torch.no_grad():
                 mdn_rnn.eval()
                 validation_loss = 0
-                for observations, _ in validation:
+                logger.info("Starting validation")
+                for observations, _ in tqdm(validation):
                     mdn_rnn.set_hidden_state()
 
                     z_vectors = observations["z"]
@@ -172,15 +202,17 @@ class TrainMDNRNN(Step):
 
             logger.info("e=%d tl=%f vl=%f", epoch, training_loss, validation_loss)
 
+            mdn_rnn.save_state()
+
             # Stop if no improvements for some time
             if no_improvement_count >= no_improvement_threshold:
                 logger.info("Stopping because no improvement threshold reached")
                 break
 
-        mdn_rnn.save_state()
-
 
 class MDN_RNN(StateSavingMixin, nn.Module):
+    hidden_units = 256
+
     def __init__(self, game: GymGame, models_dir: Path):
         self.game = game
         self.models_dir = models_dir
@@ -197,7 +229,6 @@ class MDN_RNN(StateSavingMixin, nn.Module):
         # The World Models paper also uses 5 gaussian mixtures and 256 hidden
         # units in the LSTM. The value of the temperature parameter
         # (\tau in the paper) is also taken from the paper.
-        self.hidden_units = 256
         self.gaussian_mixtures = 5
         self.temperature = 1.30
 
@@ -226,20 +257,16 @@ class MDN_RNN(StateSavingMixin, nn.Module):
 
         # Based on
         #   https://mikedusenberry.com/mixture-density-networks
-        # and extended with temperature parameter
 
-        # FIXME: Is the temperature stuff correct? We want to increase the
-        # uncertainty ...
+        # FIXME: Do we need the temperature stuff the paper mentions?
 
         # pi ... is the mixing coefficient
         # mu, sigma ... mean, standard deviation
 
-        pi = self.pi(output).view(*view_args)
-        sigma = self.sigma(output).view(*view_args)
+        # This ensures that the sum over all pi values equals 1
+        pi = F.softmax(self.pi(output), dim=2).view(*view_args)
+        # This makes sigma positive
+        sigma = torch.exp(self.sigma(output)).view(*view_args)
         mu = self.mu(output).view(*view_args)
-
-        pi = F.softmax(pi, dim=2) / self.temperature
-        sigma = torch.exp(sigma)
-        # sigma = sigma * (self.temperature ** 0.5)
 
         return pi, sigma, mu, output
