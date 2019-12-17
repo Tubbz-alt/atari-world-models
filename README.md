@@ -166,6 +166,7 @@ to fine-tune, then you can use the default target to access the various subcomma
 ```
 make observations GAME=CarRacing-v0
 make vae GAME=CarRacing-v0
+make z-values GAME=CarRacing-v0
 make mdnrnn GAME=CarRacing-v0
 make controller GAME=CarRacing-v0
 ```

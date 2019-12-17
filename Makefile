@@ -30,6 +30,10 @@ vae: export DC_USER:=${DC_USER}
 vae:
 	xhost +
 	${DC_RUN} python -m ${MODULE} -v ${GAME} train-vae
+
+z-values: export DC_USER:=${DC_USER}
+z-values:
+	xhost +
 	${DC_RUN} python -m ${MODULE} -v ${GAME} precompute-z-values
 
 mdnrnn: export DC_USER:=${DC_USER}
