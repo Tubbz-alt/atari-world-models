@@ -7,11 +7,12 @@
 [![Build Status](https://travis-ci.com/chsigi/atari-world-models.svg?branch=master)](https://travis-ci.com/chsigi/atari-world-models)
 
 # Quick preview
-
+<!---
 ## VAE
 ![VAE Output](/images/carracing-vae.png?raw=true "VAE Output")
 
 ## Controller
+-->
 
 Untrained                                                                                 | 50 hours of training
 :----------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------:
