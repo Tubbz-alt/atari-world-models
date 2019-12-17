@@ -236,16 +236,15 @@ class PrecomputeZValues(Step):
 
             # Will be filled with (z, disk_location) tuples
             results = []
+            logger.info("Computing z values")
             for dataloader in dataloaders:
-                for observation, _ in dataloader:
+                for observation, _ in tqdm(dataloader):
                     disk_location = observation["disk_location"]
                     z, _, _ = vae.encoder(observation["screen"])
                     results.append((z[0], disk_location[0]))
 
         # Sort by disk location to get a valid next_z
         results = sorted(results, key=lambda x: x[1])
-
-        logger.debug("Precomputed z values")
 
         # combine z and the next z value
         results = list(
@@ -254,13 +253,12 @@ class PrecomputeZValues(Step):
             )
         )
 
-        for ((z, disk_location), (next_z, next_disk_location)) in results:
+        logger.info("Writing z values to disk")
+        for ((z, disk_location), (next_z, next_disk_location)) in tqdm(results):
             obj = np.load(disk_location, allow_pickle=True).item()
             obj["z"] = z
             obj["next_z"] = next_z
             np.save(disk_location, obj)
-
-        logger.debug("Wrote precomputed z values to .npy files")
 
         # Write samples to disk
         with torch.no_grad():
