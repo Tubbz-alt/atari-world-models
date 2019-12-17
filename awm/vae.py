@@ -144,7 +144,7 @@ class VAE(StateSavingMixin, nn.Module):
         self.models_dir = models_dir
         # See World Models paper - Appendix A.1 Variational Autoencoder
         self.encode = nn.Sequential(
-            nn.Conv2d(3, 32, kernel_size=4, stride=2),
+            nn.Conv2d(self.game.color_channels, 32, kernel_size=4, stride=2),
             nn.ReLU(),
             # 32 x 31 x 31
             nn.Conv2d(32, 64, kernel_size=4, stride=2),
@@ -175,7 +175,7 @@ class VAE(StateSavingMixin, nn.Module):
             nn.ConvTranspose2d(64, 32, kernel_size=6, stride=2),
             nn.ReLU(),
             # 32 x 30 x 30
-            nn.ConvTranspose2d(32, 3, kernel_size=6, stride=2),
+            nn.ConvTranspose2d(32, self.game.color_channels, kernel_size=6, stride=2),
             nn.Sigmoid(),
             # 3 x 64 x 64
         )

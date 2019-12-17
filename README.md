@@ -130,7 +130,7 @@ These are the time estimates in hours including the actual time spent on a topic
 | 8  | 4 | 2, 2 | [Deliverables for Exercise 1](#t-del-ex1) | 
 | 2  |   |  | [Start with the report](#t-start-report) |
 | 16 |   | 3, 3, 5, 3, 3, 4, 4, 3, 4, 4, 3 | [Implement approach from paper](#t-implement) |
-| 16 |   |  | [Try other games and fine-tune](#t-fine-tune) | 
+| 16 |   | 4 | [Try other games and fine-tune](#t-fine-tune) | 
 | 4  |   |  | [Add findings to report and iterate](#t-start-report) |
 | 12 |   |  | [Network decisions (optional)](#t-decisions) |
 | 8  |   |  | [Finish and cleanup implementation](#t-finish-impl) |

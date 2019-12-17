@@ -1,5 +1,6 @@
 import dataclasses
 import datetime
+import itertools
 import logging
 import multiprocessing
 import time
@@ -139,12 +140,19 @@ def gather_observations(
         vdisplay.start()
 
     env = gym.make(game.key)
+    if game.wrapper is not None:
+        env = game.wrapper(env)
 
     for play in range(number_of_plays):
         env.reset()
         observations = []
 
-        for step in range(steps_per_play):
+        if steps_per_play > 0:
+            steps = range(steps_per_play)
+        else:
+            steps = itertools.count()
+
+        for step in steps:
             if step % 100 == 0:
                 logger.debug("%s: p=%d s=%d", name, play, step)
             env.render()

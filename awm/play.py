@@ -33,6 +33,8 @@ class PlayGame(Step):
             mdn_rnn.load_state()
 
             env = gym.make(self.game.key)
+            if self.game.wrapper is not None:
+                env = self.game.wrapper(env)
             if record:
                 env = Monitor(env, "monitor", force=True)
 
@@ -54,7 +56,8 @@ class PlayGame(Step):
                 env.render()
                 action = controller(z.squeeze(0).squeeze(0), h.squeeze(0).squeeze(0))
 
-                screen, reward, done, _ = env.step(action.detach().numpy())
+                actual_action = self.game.transform_action(action.detach().numpy())
+                screen, reward, done, _ = env.step(actual_action)
 
                 overall_reward += reward
                 screen = transform(screen)
