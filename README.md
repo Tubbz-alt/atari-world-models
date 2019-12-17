@@ -13,13 +13,9 @@
 
 ## Controller
 
-### Untrained
-
-![Untrained Controller](/images/untrained-controller.gif?raw=true "Untrained Controller")
-
-### 50 hours of training the controller
-
-![Trained Controller](/images/trained-controller-50.gif?raw=true "Trained Controller")
+Untrained                                                                                 | 50 hours of training
+:----------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------:
+![Untrained Controller](/images/untrained-controller.gif?raw=true "Untrained Controller") | ![Trained Controller](/images/trained-controller-50.gif?raw=true "Trained Controller")
 
 # Summary
 
