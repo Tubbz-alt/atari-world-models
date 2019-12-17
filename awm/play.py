@@ -17,7 +17,7 @@ class PlayGame(Step):
     hyperparams_key = "play_game"
 
     def __call__(self, step_limit, solution=None, stamp=None, record=False):
-        logger.info("Playing game %s", self.game)
+        logger.info("Playing game %s with step_limit %d", self.game, step_limit)
 
         with torch.no_grad():
             controller = Controller(self.game, self.models_dir)
@@ -45,6 +45,8 @@ class PlayGame(Step):
             z, _, _ = vae.encoder(screen)
             _, _, _, h = mdn_rnn(z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0))
 
+            # h = torch.tensor([[[0] * 256]], dtype=torch.float32)
+
             overall_reward = 0
             steps = 0
 
@@ -62,6 +64,11 @@ class PlayGame(Step):
                 _, _, _, h = mdn_rnn(z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0))
 
                 if done or (step_limit and steps >= step_limit):
+                    if done:
+                        logger.info("Game reached done")
+                    else:
+                        logger.info("Step limit reached")
+
                     break
 
                 steps += 1
