@@ -108,6 +108,11 @@ def loss_function(pi, sigma, mu, target):
 
 
 class TrainMDNRNN(Step):
+    """ The main training loop of the MDN RNN.
+
+    Train the MDN RNN for at most *number_of_epoch* epochs or stop if
+    *no_improvement_threshold* is exceeded.
+    """
     hyperparams_key = "mdnrnn"
 
     def __call__(
@@ -116,9 +121,6 @@ class TrainMDNRNN(Step):
         no_improvement_threshold,
         create_progress_samples=CREATE_PROGRESS_SAMPLES,
     ):
-        """ Train the MDN RNN for at most *number_of_epoch* epochs.
-
-        """
         logger.info("Starting to train the MDN-RNN for game %s", self.game.key)
         training, validation = load_observations(
             self.game,
@@ -211,20 +213,20 @@ class TrainMDNRNN(Step):
 
 
 class MDN_RNN(StateSavingMixin, nn.Module):
+    """ This is the M part of the World Models approach
+
+    Given a condensed representation of the screen obtained from the VAE
+    (z) and the corresponding action, we try to predict the representation
+    of the screen in the next step. Since this is an MDN RNN we do not
+    directly predict z, but try to predict a mixture of gaussian distributions
+    that match the distribution behind the "real" z.
+    """
     hidden_units = 256
 
     def __init__(self, game: GymGame, models_dir: Path):
         self.game = game
         self.models_dir = models_dir
         super().__init__()
-        """ This is the M part of the World Models approach
-        
-        Given a condensed representation of the screen obtained from the VAE
-        (z) and the corresponding action, we try to predict the representation
-        of the screen in the next step. Since this is an MDN RNN we do not
-        directly predict z, but try to predict a mixture of gaussian distributions
-        that match the distribution behind the "real" z.
-        """
 
         # The World Models paper also uses 5 gaussian mixtures and 256 hidden
         # units in the LSTM. The value of the temperature parameter

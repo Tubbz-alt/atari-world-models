@@ -135,6 +135,12 @@ class TrainVAE(Step):
 
 
 class VAE(StateSavingMixin, nn.Module):
+    """ This is the implementation of the VAE.
+
+    This takes in the screen and generates a vector of size *z_size* that "encodes
+    important properties of the screen". This vector is later on passed to the MDN-RNN
+    and the controller.
+    """
     # The size of the latent vector (the size of the bottleneck)
     z_size = 32
 
@@ -186,6 +192,7 @@ class VAE(StateSavingMixin, nn.Module):
         return mu + std * torch.randn_like(std)
 
     def decoder(self, z):
+        """ Turn a z vector into an image """
         batch_size = z.size(0)
         # Unbottle
         z = self.unbottle(z)
@@ -195,6 +202,7 @@ class VAE(StateSavingMixin, nn.Module):
         return y
 
     def encoder(self, x):
+        """ Create the z vector from a screen image """
         batch_size = x.size(0)
         x = self.encode(x)
         x = x.view(batch_size, -1)
@@ -219,6 +227,12 @@ def loss_fn(reconstruction, original, mu, logvar):
 
 
 class PrecomputeZValues(Step):
+    """ This step precomputes the z values for all observations.
+
+    After training the VAE, we precompute the z values from all screens and in addition
+    fill the next_z value slot in our observation files as well. We need the z and next_z
+    values when training the MDN-RNN.
+    """
     hyperparams_key = None
 
     def __call__(self):
@@ -260,7 +274,7 @@ class PrecomputeZValues(Step):
             obj["next_z"] = next_z
             np.save(disk_location, obj)
 
-        # Write samples to disk
+        # Write samples to disk for visual inspection
         with torch.no_grad():
             images = None
             for _ in range(32):

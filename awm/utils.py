@@ -65,7 +65,7 @@ class StateSavingMixin:
 
 
 class Step(ABC):
-    """ A step to take to train the NN.
+    """ A step to take to train or interact with the NN.
 
     The step objects are exposed to the commandline via the various subcommands.
     The hyperparams_key attribute is used to access the relevant hyperparameters
@@ -96,6 +96,9 @@ class Step(ABC):
 
 
 def merge_args_with_hyperparams(args, hyperparams):
+    """ Take arguments returned by ArgumentParser.parse() and a hyperparameters object
+    and merge the two. args content has higher priority than hyperparams content.
+    """
     result = dataclasses.asdict(hyperparams)
 
     for k, v in args.items():

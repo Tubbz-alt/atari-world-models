@@ -22,6 +22,10 @@ from .vae import PrecomputeZValues, TrainVAE
 
 
 def parse():
+    """ Handle commandline access to the various Step subclasses.
+
+    Each Step subclass represents a subcommand/subparser.
+    """
     description = """
 awm - {}
 

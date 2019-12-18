@@ -21,6 +21,13 @@ logger = logging.getLogger(__name__)
 
 
 def worker(game, play_game, solution_q, reward_q, stop, show_screen):
+    """ A worker that plays the game with a proposed solution.
+
+    Workers fetch proposed solutions from solution_q (Solution Queue) and put the
+    matching reward into the reward_q (Reward Queue). If a stop signal is received the
+    worker terminates. Rewards are matched to solutions at the receiving and by using
+    the solution_id as an identifier.
+    """
 
     if not show_screen:
         vdisplay = Xvfb()
@@ -42,6 +49,8 @@ def worker(game, play_game, solution_q, reward_q, stop, show_screen):
 
 
 def get_best_averaged(solution_q, reward_q, solutions, rewards, average_over):
+    """ Test the best solution by playing it *average_over* times and taking the mean.
+    """
     best_reward = sorted(rewards.items(), key=lambda x: x[1])[0]
     best_solution = solutions[best_reward[0]]
 
@@ -61,12 +70,21 @@ def get_best_averaged(solution_q, reward_q, solutions, rewards, average_over):
 
 
 def get_best(solutions, rewards):
+    """ Given a dict of rewards and solutions return the solution with the "best" reward.
+    """
     best_reward = sorted(rewards.items(), key=lambda x: x[1])[0]
     best_solution = solutions[best_reward[0]]
     return best_solution, best_reward[1]
 
 
 class TrainController(Step):
+    """ The main training loop of the Controller.
+
+    The main idea is to take the parameters of the Controller NN and pass it to
+    cma.CMAEvolutionStrategy. The returned proposed solutions are evaluated by
+    actually playing the game. The reward obtained is feed back into
+    cma.CMAEvulutionStrategy and the process starts anew.
+    """
     hyperparams_key = "controller"
 
     def __call__(
@@ -189,6 +207,11 @@ class TrainController(Step):
 
 
 class Controller(StateSavingMixin, nn.Module):
+    """ The C part of the World Models approach.
+
+    Take a z_vector obtain from the VAE and the hidden_state of the MDN-RNN and map it
+    to an action vector.
+    """
     def __init__(self, game: GymGame, models_dir: Path):
         super().__init__()
         self.game = game
@@ -203,7 +226,7 @@ class Controller(StateSavingMixin, nn.Module):
 
     def load_solution(self, solution):
         """ Load a solution vector obtained from ES-CMA into the parameters
-        
+
         This currently ignores the biases.
         """
         weights = next(self.parameters())

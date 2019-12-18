@@ -25,6 +25,11 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Observation:
+    """ Small container for observations
+
+    This is the main datastructure that gets passed around for training and validation
+    purposes.
+    """
     filename: str
     screen: np.array
     action: np.array
@@ -52,6 +57,9 @@ class Observation:
 
 
 class GatherObservationsPooled(Step):
+    """ Gather observations by playing the game with a random strategy and using
+    multiple processes to utilize all available CPUs.
+    """
     hyperparams_key = "observations"
 
     def __call__(
@@ -195,7 +203,7 @@ transform = transforms.Compose(
 
 def load_observations(
     game: GymGame,
-    random_split,
+    random_split: bool,
     observations_dir,
     batch_size=32,
     drop_z_values=True,
@@ -203,7 +211,9 @@ def load_observations(
 ):
     """ Load observations from disk and return a dataset and dataloader.
 
-    Observations are loaded from *observations_dir*.
+    Observations are loaded from *observations_dir*. drop_z_values drops the z and
+    next_z parameters from the dataset. random_split controls wether the dataset is
+    split randomly into training/validation subsets or not.
     """
 
     def load_and_transform(filename):
