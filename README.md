@@ -90,10 +90,10 @@ and gradually improve the network.
             - [x] Create Docker container
         - [x] Write README.md
 - [ ] Exercise 2
-    - [ ] <a name="t-start-report"></a>**Start with the report**
-        - [ ] Create LaTeX template
-        - [ ] Document progress and decisions
-        - [ ] Generate data to use for plots/figures
+    - [x] <a name="t-start-report"></a>**Start with the report**
+        - [x] Create LaTeX template
+        - [x] Document progress and decisions
+        - [x] Generate data to use for plots/figures
     - [ ] <a name="t-implement"></a>**Implement approach from paper**
         - [x] Implement the observation gathering
         - [x] Implement the VAE part
@@ -106,15 +106,15 @@ and gradually improve the network.
         - [ ] Get an understanding of the decisions
         - [ ] Find a way to visualize some of the decisions
 - [ ] Exercise 3
-    - [ ] <a name="t-finish-impl"></a>**Finish and cleanup implementation**
+    - [x] <a name="t-finish-impl"></a>**Finish and cleanup implementation**
     - [ ] <a name="t-application"></a>**Implement web-app (optional)**
         - [ ] Host implementation on private server
         - [ ] Create a frontend / visualizer
             - [ ] Settle on a framework
             - [ ] Implement basic frontend
-    - [ ] <a name="t-finish-report"></a>**Finish and cleanup report**
+    - [x] <a name="t-finish-report"></a>**Finish and cleanup report**
     - [ ] <a name="t-presentation"></a>**Presentation**
-        - [ ] Create beamer LaTeX template
+        - [x] Create beamer LaTeX template
         - [ ] Write presentation
         - [ ] Practise presentation
 
@@ -128,16 +128,16 @@ These are the time estimates in hours including the actual time spent on a topic
 | 4  | 8 | 4, 4 | [Find a specific topic](#t-specific-topic) | 
 | 12 | 9 | 2, 4, 2, 1 | [Literature and tutorial research / reading](#t-lit-research) | 
 | 8  | 4 | 2, 2 | [Deliverables for Exercise 1](#t-del-ex1) | 
-| 2  |   |  | [Start with the report](#t-start-report) |
-| 16 |   | 3, 3, 5, 3, 3, 4, 4, 3, 4, 4, 3 | [Implement approach from paper](#t-implement) |
-| 16 |   | 4 | [Try other games and fine-tune](#t-fine-tune) | 
-| 4  |   |  | [Add findings to report and iterate](#t-start-report) |
+| 2  | 2 | 2 | [Start with the report](#t-start-report) |
+| 16 | 45 | 3, 3, 5, 3, 3, 4, 4, 3, 4, 4, 3, 6 | [Implement approach from paper](#t-implement) |
+| 16 | 4 | 4 | [Try other games and fine-tune](#t-fine-tune) | 
+| 4  | 4  | 4 | [Add findings to report and iterate](#t-start-report) |
 | 12 |   |  | [Network decisions (optional)](#t-decisions) |
-| 8  |   |  | [Finish and cleanup implementation](#t-finish-impl) |
+| 8  | 4 | 4 | [Finish and cleanup implementation](#t-finish-impl) |
 | 12 |   |  | [Implement web-app (optional)](#t-application) |
-| 4  |   |  | [Finish and cleanup report](#t-finish-report) | 
+| 4  | 3 | 3 | [Finish and cleanup report](#t-finish-report) | 
 | 6  |   |  | [Presentation](#t-presentation) |
-| **108** | **24** | | |
+| **108** | **88** | | |
 
 # Error metric
 
