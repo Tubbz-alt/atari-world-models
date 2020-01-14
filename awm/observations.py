@@ -30,6 +30,7 @@ class Observation:
     This is the main datastructure that gets passed around for training and validation
     purposes.
     """
+
     filename: str
     screen: np.array
     action: np.array
@@ -60,6 +61,7 @@ class GatherObservationsPooled(Step):
     """ Gather observations by playing the game with a random strategy and using
     multiple processes to utilize all available CPUs.
     """
+
     hyperparams_key = "observations"
 
     def __call__(

@@ -113,6 +113,7 @@ class TrainMDNRNN(Step):
     Train the MDN RNN for at most *number_of_epoch* epochs or stop if
     *no_improvement_threshold* is exceeded.
     """
+
     hyperparams_key = "mdnrnn"
 
     def __call__(
@@ -221,6 +222,7 @@ class MDN_RNN(StateSavingMixin, nn.Module):
     directly predict z, but try to predict a mixture of gaussian distributions
     that match the distribution behind the "real" z.
     """
+
     hidden_units = 256
 
     def __init__(self, game: GymGame, models_dir: Path):

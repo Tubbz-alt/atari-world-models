@@ -85,6 +85,7 @@ class TrainController(Step):
     actually playing the game. The reward obtained is feed back into
     cma.CMAEvulutionStrategy and the process starts anew.
     """
+
     hyperparams_key = "controller"
 
     def __call__(
@@ -212,6 +213,7 @@ class Controller(StateSavingMixin, nn.Module):
     Take a z_vector obtain from the VAE and the hidden_state of the MDN-RNN and map it
     to an action vector.
     """
+
     def __init__(self, game: GymGame, models_dir: Path):
         super().__init__()
         self.game = game

@@ -141,6 +141,7 @@ class VAE(StateSavingMixin, nn.Module):
     important properties of the screen". This vector is later on passed to the MDN-RNN
     and the controller.
     """
+
     # The size of the latent vector (the size of the bottleneck)
     z_size = 32
 
@@ -233,6 +234,7 @@ class PrecomputeZValues(Step):
     fill the next_z value slot in our observation files as well. We need the z and next_z
     values when training the MDN-RNN.
     """
+
     hyperparams_key = None
 
     def __call__(self):
