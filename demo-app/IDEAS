@@ -1,2 +1,0 @@
-* webapp that visualizes the vae
-* stream xvfb content via websockets to browser, allow user override!

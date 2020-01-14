@@ -16,6 +16,56 @@ logger = logging.getLogger(__name__)
 class PlayGame(Step):
     hyperparams_key = "play_game"
 
+    def generator(self):
+        """ Play the game using a generator that returns live information.
+
+        Used in the demo application.
+        """
+        logger.info("Playing game %s in generator mode", self.game)
+
+        with torch.no_grad():
+            controller = Controller(self.game, self.models_dir)
+            controller.load_state("best")
+
+            vae = VAE(self.game, self.models_dir)
+            vae.load_state()
+
+            mdn_rnn = MDN_RNN(self.game, self.models_dir)
+            mdn_rnn.load_state()
+
+            env = gym.make(self.game.key)
+            if self.game.wrapper is not None:
+                env = self.game.wrapper(env)
+
+            action = torch.zeros(self.game.action_vector_size)
+
+            screen = env.reset()
+            screen = transform(screen)
+            screen.unsqueeze_(0)
+
+            z, _, _ = vae.encoder(screen)
+            _, _, _, h = mdn_rnn(z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0))
+
+            while True:
+                real_screen = env.render(mode="rgb_array")
+                action = controller(z.squeeze(0).squeeze(0), h.squeeze(0).squeeze(0))
+                actual_action = self.game.transform_action(action.detach().numpy())
+
+                yield real_screen, screen, z, vae.decoder(z), h
+
+                screen, reward, done, _ = env.step(actual_action)
+
+                screen = transform(screen)
+                screen.unsqueeze_(0)
+
+                z, _, _ = vae.encoder(screen)
+                _, _, _, h = mdn_rnn(z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0))
+
+                if done:
+                    break
+
+            env.close()
+
     def __call__(self, step_limit, solution=None, stamp=None, record=False):
         logger.info("Playing game %s with step_limit %d", self.game, step_limit)
 

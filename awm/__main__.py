@@ -13,6 +13,7 @@ from . import (
     VERSION,
 )
 from .controller import TrainController
+from .demo import Demo
 from .games import SUPPORTED_GAMES
 from .mdn_rnn import TrainMDNRNN
 from .observations import GatherObservationsPooled
@@ -185,6 +186,9 @@ Atari games.
         "--record", action="store_true", default=False, help="Record screen to disk"
     )
     play_game_parser.set_defaults(klass=PlayGame)
+
+    demo_parser = subparsers.add_parser("demo", help="Demo app", description="Demo app",)
+    demo_parser.set_defaults(klass=Demo)
 
     args = vars(parser.parse_args())
 

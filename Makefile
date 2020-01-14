@@ -9,6 +9,11 @@ ifeq ($(GAME),)
 GAME:=CarRacing-v0
 endif
 
+# Run the demo application
+demo: export DC_USER:=${DC_USER}
+demo:
+	xhost +
+	${DC_RUN} python -m ${MODULE} -v ${GAME} demo
 
 # Custom access to commandline via ARGS="..."
 deep: export DC_USER:=${DC_USER}
