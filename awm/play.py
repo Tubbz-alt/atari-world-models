@@ -5,7 +5,7 @@ import torch
 from gym.wrappers.monitor import Monitor
 
 from .controller import Controller
-from .mdn_rnn import MDN_RNN
+from .mdn_rnn import MDN_RNN, sample
 from .observations import transform
 from .utils import Step
 from .vae import VAE
@@ -44,14 +44,16 @@ class PlayGame(Step):
             screen.unsqueeze_(0)
 
             z, _, _ = vae.encoder(screen)
-            _, _, _, h = mdn_rnn(z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0))
+            pi, sigma, mu, h = mdn_rnn(z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0))
 
             while True:
                 real_screen = env.render(mode="rgb_array")
                 action = controller(z.squeeze(0).squeeze(0), h.squeeze(0).squeeze(0))
                 actual_action = self.game.transform_action(action.detach().numpy())
 
-                yield real_screen, screen, z, vae.decoder(z), h
+                yield real_screen, screen, z, vae.decoder(z), vae.decoder(
+                    sample(pi, sigma, mu).view(-1, 32)
+                ), actual_action
 
                 screen, reward, done, _ = env.step(actual_action)
 
@@ -59,7 +61,9 @@ class PlayGame(Step):
                 screen.unsqueeze_(0)
 
                 z, _, _ = vae.encoder(screen)
-                _, _, _, h = mdn_rnn(z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0))
+                pi, sigma, mu, h = mdn_rnn(
+                    z.unsqueeze(0), action.unsqueeze(0).unsqueeze(0)
+                )
 
                 if done:
                     break

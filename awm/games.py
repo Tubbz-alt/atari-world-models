@@ -37,7 +37,11 @@ class GymGame(metaclass=RegisterGame):
 
     @staticmethod
     def transform_action(action):
-        return action
+        # action:
+        # 0: steering -1 -> 1
+        # 1: gas 0 -> 1
+        # 2: break 0 -> 1
+        return action[0], (action[1] + 1) / 2, (action[2] + 1) / 2
 
 
 class CarRacing(GymGame):
