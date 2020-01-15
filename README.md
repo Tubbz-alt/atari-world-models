@@ -18,6 +18,9 @@ Untrained                                                                       
 :----------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------:
 ![Untrained Controller](/images/untrained-controller.gif?raw=true "Untrained Controller") | ![Trained Controller](/images/trained-controller-50.gif?raw=true "Trained Controller")
 
+## Demo app
+![Demo app](/images/demo-app.png?raw=true "Demo App")
+
 # Summary
 
 This project attempts to recreate the approach described in the first part of
