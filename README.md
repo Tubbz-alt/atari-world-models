@@ -134,7 +134,7 @@ These are the time estimates in hours including the actual time spent on a topic
 | 4  | 4  | 4 | [Add findings to report and iterate](#t-start-report) |
 | 12 |   |  | [Network decisions (optional)](#t-decisions) |
 | 8  | 4 | 4 | [Finish and cleanup implementation](#t-finish-impl) |
-| 12 | 4,4  |  | [Implement demo-app (optional)](#t-application) |
+| 12 |  | 4, 4  | [Implement demo-app (optional)](#t-application) |
 | 4  | 3 | 3 | [Finish and cleanup report](#t-finish-report) | 
 | 6  |   |  | [Presentation](#t-presentation) |
 | **108** | **88** | | |
