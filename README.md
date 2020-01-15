@@ -74,7 +74,7 @@ and gradually improve the network.
 
 # Work-breakdown structure and progress tracking
 
-- [ ] Exercise 1
+- [x] Exercise 1
     - [x] <a name="t-broad-topic"></a>**Find a broad topic**
         - [x] Get an overview of Deep Reinforcement Learning approaches
     - [x] <a name="t-specific-topic"></a>**Find a specific topic**
@@ -102,16 +102,16 @@ and gradually improve the network.
         - [ ] Try to replicate the findings in the paper with pong
     - [ ] <a name="t-fine-tune"></a>**Try other games and fine-tune**
         - [ ] Training runs
-    - [ ] <a name="t-decisions"></a>**Network decisions (optional)**
+    - [x] <a name="t-decisions"></a>**Network decisions (optional)**
         - [ ] Get an understanding of the decisions
-        - [ ] Find a way to visualize some of the decisions
+        - [x] Find a way to visualize some of the decisions
 - [ ] Exercise 3
     - [x] <a name="t-finish-impl"></a>**Finish and cleanup implementation**
-    - [ ] <a name="t-application"></a>**Implement web-app (optional)**
-        - [ ] Host implementation on private server
-        - [ ] Create a frontend / visualizer
-            - [ ] Settle on a framework
-            - [ ] Implement basic frontend
+    - [x] <a name="t-application"></a>**Implement demo-app**
+        - [ ] -Host implementation on private server-
+        - [x] Create a frontend / visualizer
+            - [x] Settle on a framework
+            - [x] Implement basic frontend
     - [x] <a name="t-finish-report"></a>**Finish and cleanup report**
     - [ ] <a name="t-presentation"></a>**Presentation**
         - [x] Create beamer LaTeX template
@@ -134,7 +134,7 @@ These are the time estimates in hours including the actual time spent on a topic
 | 4  | 4  | 4 | [Add findings to report and iterate](#t-start-report) |
 | 12 |   |  | [Network decisions (optional)](#t-decisions) |
 | 8  | 4 | 4 | [Finish and cleanup implementation](#t-finish-impl) |
-| 12 |   |  | [Implement web-app (optional)](#t-application) |
+| 12 | 4,4  |  | [Implement demo-app (optional)](#t-application) |
 | 4  | 3 | 3 | [Finish and cleanup report](#t-finish-report) | 
 | 6  |   |  | [Presentation](#t-presentation) |
 | **108** | **88** | | |
@@ -180,6 +180,12 @@ make controller GAME=CarRacing-v0
 
 ```
 make play GAME=CarRacing-v0
+```
+
+## Running the demo application
+
+```
+make demo
 ```
 
 ## Custom interaction
